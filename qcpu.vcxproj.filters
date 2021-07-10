@@ -13,10 +13,93 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Ext">
+      <UniqueIdentifier>{70b437fc-086c-4ec4-9c55-be6c22c42dfe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Ext\imgui">
+      <UniqueIdentifier>{48ae201f-7ca8-4c33-af1d-3f84a17cb58e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Ext\imgui\backends">
+      <UniqueIdentifier>{605339cb-6322-410b-a4e2-d30669385c44}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Ext\glad">
+      <UniqueIdentifier>{7f81ea0d-1b8a-4581-a29b-7d10daff51f3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="qcpu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\imgui\imgui.cpp">
+      <Filter>Ext\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\imgui\imgui_demo.cpp">
+      <Filter>Ext\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\imgui\imgui_draw.cpp">
+      <Filter>Ext\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\imgui\imgui_tables.cpp">
+      <Filter>Ext\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\imgui\imgui_widgets.cpp">
+      <Filter>Ext\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\imgui\backends\imgui_impl_sdl.cpp">
+      <Filter>Ext\imgui\backends</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\imgui\backends\imgui_impl_opengl3.cpp">
+      <Filter>Ext\imgui\backends</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\glad\src\glad.c">
+      <Filter>Ext\glad</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="qcpu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="assembler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="display.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="application.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="platform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\imgui\imconfig.h">
+      <Filter>Ext\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\imgui\imgui.h">
+      <Filter>Ext\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\imgui\imgui_internal.h">
+      <Filter>Ext\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\imgui\imstb_rectpack.h">
+      <Filter>Ext\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\imgui\imstb_textedit.h">
+      <Filter>Ext\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\imgui\imstb_truetype.h">
+      <Filter>Ext\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\imgui\backends\imgui_impl_sdl.h">
+      <Filter>Ext\imgui\backends</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\imgui\backends\imgui_impl_opengl3.h">
+      <Filter>Ext\imgui\backends</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\glad\include\glad\glad.h">
+      <Filter>Ext\glad</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
