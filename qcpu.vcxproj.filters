@@ -25,6 +25,9 @@
     <Filter Include="Ext\glad">
       <UniqueIdentifier>{7f81ea0d-1b8a-4581-a29b-7d10daff51f3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Ext\imgui\ext">
+      <UniqueIdentifier>{e37d5172-eef1-46d2-8fde-e67305ffa408}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -56,6 +59,9 @@
     </ClCompile>
     <ClCompile Include="ext\glad\src\glad.c">
       <Filter>Ext\glad</Filter>
+    </ClCompile>
+    <ClCompile Include="ext\imgui\ext\texteditor\imgui_texteditor.cpp">
+      <Filter>Ext\imgui\ext</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -100,6 +106,9 @@
     </ClInclude>
     <ClInclude Include="ext\glad\include\glad\glad.h">
       <Filter>Ext\glad</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\imgui\ext\texteditor\imgui_texteditor.h">
+      <Filter>Ext\imgui\ext</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

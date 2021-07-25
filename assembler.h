@@ -158,12 +158,12 @@ public:
 			return ParseInt(s);
 		}
 		// Grab all the hex digits
-		else if (std::regex_search(s.begin(), s.end(), match, std::regex(R"(^0x[0-9a-f]+$)", std::regex_constants::icase)))
+		else if (std::regex_search(s.begin(), s.end(), match, std::regex(R"(^0x([0-9a-f]+)$)", std::regex_constants::icase)))
 		{
 			return ParseInt(match[0], 16);
 		}
 		// Grab all the binary digits
-		else if (std::regex_search(s.begin(), s.end(), match, std::regex(R"(^0b[01]+$)", std::regex_constants::icase)))
+		else if (std::regex_search(s.begin(), s.end(), match, std::regex(R"(^0b([01]+)$)", std::regex_constants::icase)))
 		{
 			return ParseInt(match[1], 2);
 		}
@@ -214,7 +214,7 @@ public:
 		int32_t			depth = 0;
 		std::string		token = "";
 
-		while (index < text.size())
+		while (index <= text.size())
 		{
 			std::string c(1, text[index]);
 			if (c == ";" || c == "#")

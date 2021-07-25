@@ -116,10 +116,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)ext\SDL2\include;$(ProjectDir)ext\assertf;$(ProjectDir)ext\imgui;$(ProjectDir)ext\glad\include;$(ProjectDir)ext;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)ext\SDL2\include;$(ProjectDir)ext\assertf;$(ProjectDir)ext\imgui;$(ProjectDir)ext\glad\include;$(ProjectDir)ext;$(ProjectDir)ext\imgui\ext\texteditor;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -154,6 +156,7 @@
     <ClCompile Include="ext\glad\src\glad.c" />
     <ClCompile Include="ext\imgui\backends\imgui_impl_opengl3.cpp" />
     <ClCompile Include="ext\imgui\backends\imgui_impl_sdl.cpp" />
+    <ClCompile Include="ext\imgui\ext\texteditor\imgui_texteditor.cpp" />
     <ClCompile Include="ext\imgui\imgui.cpp" />
     <ClCompile Include="ext\imgui\imgui_demo.cpp" />
     <ClCompile Include="ext\imgui\imgui_draw.cpp" />
@@ -169,6 +172,7 @@
     <ClInclude Include="ext\glad\include\glad\glad.h" />
     <ClInclude Include="ext\imgui\backends\imgui_impl_opengl3.h" />
     <ClInclude Include="ext\imgui\backends\imgui_impl_sdl.h" />
+    <ClInclude Include="ext\imgui\ext\texteditor\imgui_texteditor.h" />
     <ClInclude Include="ext\imgui\imconfig.h" />
     <ClInclude Include="ext\imgui\imgui.h" />
     <ClInclude Include="ext\imgui\imgui_internal.h" />

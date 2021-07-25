@@ -4,6 +4,9 @@
 
 #pragma once
 
+#include <algorithm>
+#include <execution>
+
 enum class EDrawMode : uint8_t
 {
 	Disabled,
@@ -30,6 +33,7 @@ struct Display
 		, m_DisplayMode(displayMode)
 		, m_Pixels()
 		, m_Colour(65535)
+		, m_Flush(false)
 	{
 		Init();
 
@@ -44,6 +48,30 @@ struct Display
 	{
 		m_Pixels.resize(GetBufferSize());
 		std::fill(m_Pixels.begin(), m_Pixels.end(), 0);
+	}
+
+	void Tick()
+	{
+		if (ShouldFlush())
+		{
+			std::for_each(std::execution::par_unseq, m_Pixels.begin(), m_Pixels.end(), [](auto&& item)
+			{
+				if (item > 0)
+				{
+					uint8_t temp = item;
+					item -= 8;
+					if (item > temp)
+					{
+						item = 0;
+					}
+				}
+			});
+		}
+	}
+
+	void Flush()
+	{
+		m_Flush = true;
 	}
 
 	const std::vector<uint8_t>& GetPixels() const
@@ -81,6 +109,16 @@ struct Display
 	{
 		m_ColourMode = mode;
 		m_Colour = colour;
+	}
+
+	bool ShouldFlush() const
+	{
+		return m_Flush;
+	}
+
+	void ClearFlush()
+	{
+		m_Flush = false;
 	}
 
 private:
@@ -193,7 +231,7 @@ private:
 			case EDisplayMode::Optron:
 			case EDisplayMode::Vectron:
 			{
-				return (pixel / 65536) * m_Width;
+				return static_cast<uint16_t>((static_cast<float>(pixel) / static_cast<float>(65536)) * static_cast<float>(m_Width));
 				// return pixel % m_Width;
 			}
 			break;
@@ -244,6 +282,7 @@ private:
 	EDrawMode					m_DrawMode;
 	EColourMode					m_ColourMode;
 
+	uint8_t						m_Flush : 1;
 	uint16_t					m_Colour;
 	uint16_t					m_CursorX;
 	uint16_t					m_CursorY;

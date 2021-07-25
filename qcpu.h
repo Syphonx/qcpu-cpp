@@ -91,12 +91,14 @@ struct Flags
 {
 	Flags()
 		: halt(0)
-		, stop(-1)
+		, exit(-1)
+		, blok(false)
 	{
 	}
 
 	int16_t halt;
-	int16_t stop;
+	int16_t exit;
+	bool	blok;
 };
 
 struct Registers
@@ -434,7 +436,7 @@ private:
 
 	void cpu_ext(const OpArgs code)
 	{
-		flags.stop = Read(code);
+		flags.exit = Read(code);
 	}
 
 	void cpu_sys(const OpArgs args)

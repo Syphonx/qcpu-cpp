@@ -13,12 +13,202 @@
 #include <imgui/ext/imgui_memory_editor.h>
 #include <imgui/backends/imgui_impl_sdl.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
+#include <imgui/ext/texteditor/imgui_texteditor.h>
 
-const uint16_t TEXTURE_WIDTH = 128;
-const uint16_t TEXTURE_HEIGHT = 128;
+const uint16_t TEXTURE_WIDTH = 512;
+const uint16_t TEXTURE_HEIGHT = 512;
 
-struct Terminal
+// Shader sources
+const GLchar* vertexSource = R"glsl(
+	#version 330 core
+	layout (location = 0) in vec2 aPos;
+	layout (location = 1) in vec3 aColor;
+	layout (location = 2) in vec2 aTexCoord;
+	out vec3 outColor;
+	out vec2 TexCoord;
+	void main()
+	{
+		gl_Position = vec4(aPos, 1.0, 1.0);
+		outColor = aColor;
+		TexCoord = vec2(aTexCoord.x, aTexCoord.y);
+	}
+)glsl";
+
+const GLchar* fragmentSource = R"glsl(
+	#version 330 core
+	out vec4 FragColor;
+	in vec3 outColor;
+	in vec2 TexCoord;
+	uniform sampler2D inTexture;
+	void main()
+	{
+		FragColor = texture(inTexture, TexCoord);
+	}
+)glsl";
+
+struct Texture
 {
+	Texture()
+	{
+	}
+
+	void Create()
+	{
+		glGenTextures(1, &inTexture);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, inTexture);
+
+		// set the texture wrapping parameters
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+		// set texture filtering parameters
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		std::vector<GLubyte> pixels;
+		int pixelIndex = 0;
+		pixels.clear();
+		pixels.resize(TEXTURE_WIDTH * TEXTURE_HEIGHT * 4);
+
+		for (size_t i = 0; i < TEXTURE_WIDTH * TEXTURE_HEIGHT * 4; i++)
+		{
+			pixels[i] = rand() % 255;
+		}
+
+		glTexImage2D(
+			GL_TEXTURE_2D,			// target
+			0,						// mip
+			GL_RGBA, 				// format
+			TEXTURE_WIDTH, 			// width
+			TEXTURE_HEIGHT, 		// heigh
+			0, 						// border
+			GL_BGRA, 				// format
+			GL_UNSIGNED_INT_8_8_8_8_REV, 		// type
+			pixels.data()			// pixels
+		);
+
+		glBindTexture(GL_TEXTURE_2D, 0); // unbind
+	}
+
+	GLuint					inTexture;
+};
+
+struct Shader
+{
+	void ValidateShader(GLuint shader, const std::string& type)
+	{
+		GLint					success;
+		std::vector<GLchar>		infoLog;
+		GLint					maxLength = 256;
+
+		if (type != "Program")
+		{
+			glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+			if (!success)
+			{
+				glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
+				infoLog.resize(maxLength);
+
+				glGetShaderInfoLog(shader, maxLength, &maxLength, &infoLog[0]);
+				printf("Failed to compile shader %s (%s)", type.c_str(), &infoLog[0]);
+			}
+		}
+		else
+		{
+			glGetProgramiv(shader, GL_LINK_STATUS, &success);
+			if (!success)
+			{
+				glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
+				infoLog.resize(maxLength);
+
+				glGetProgramInfoLog(shader, maxLength, &maxLength, &infoLog[0]);
+				printf("Failed to link shader %s (%s)", type.c_str(), &infoLog[0]);
+			}
+		}
+	}
+
+	void Create()
+	{
+		// Create and compile the vertex shader
+		GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+		glShaderSource(vertexShader, 1, &vertexSource, NULL);
+		glCompileShader(vertexShader);
+		ValidateShader(vertexShader, "Vertex");
+
+		// Create and compile the fragment shader
+		GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+		glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
+		glCompileShader(fragmentShader);
+		ValidateShader(fragmentShader, "Fragment");
+
+		// Link the vertex and fragment shader into a shader program
+		shaderProgram = glCreateProgram();
+		glAttachShader(shaderProgram, vertexShader);
+		glAttachShader(shaderProgram, fragmentShader);
+		glLinkProgram(shaderProgram);
+		ValidateShader(shaderProgram, "Program");
+
+		glUseProgram(shaderProgram);
+	}
+
+	void Use()
+	{
+		glUseProgram(shaderProgram);
+	}
+
+	GLuint shaderProgram;
+};
+
+struct Quad
+{
+	Quad()
+	{
+	}
+
+	void Create(const Shader& shader)
+	{
+		glGenVertexArrays(1, &vao);
+		glGenBuffers(1, &vbo);
+		glGenBuffers(1, &ebo);
+
+		glBindVertexArray(vao);
+
+		GLfloat vertices[] = {
+			-1.0f,  1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Top-left
+			 1.0f,  1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Top-right
+			 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // Bottom-right
+			-1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f  // Bottom-left
+		};
+
+		GLuint elements[] = {
+			0, 1, 3, // first triangle
+			1, 2, 3  // second triangle
+		};
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW);
+
+		// Specify the layout of the vertex data
+		GLint posAttrib = glGetAttribLocation(shader.shaderProgram, "aPos");
+		glEnableVertexAttribArray(posAttrib);
+		glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), 0);
+
+		GLint colAttrib = glGetAttribLocation(shader.shaderProgram, "aColor");
+		glEnableVertexAttribArray(colAttrib);
+		glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (void*)(2 * sizeof(GLfloat)));
+
+		GLint texAttrib = glGetAttribLocation(shader.shaderProgram, "aTexCoord");
+		glEnableVertexAttribArray(texAttrib);
+		glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (void*)(5 * sizeof(GLfloat)));
+	}
+
+	GLuint vao;
+	GLuint vbo;
+	GLuint ebo;
 };
 
 class Platform
@@ -29,8 +219,6 @@ public:
 		, m_Height(height)
 		, m_IsRunning(true)
 		, m_Window(nullptr)
-		, m_Renderer(nullptr)
-		, m_Texture(nullptr)
 	{
 		Init();
 	}
@@ -49,10 +237,10 @@ public:
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 		SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+
 		int32_t windowFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
 		m_Window = SDL_CreateWindow(
 			"QCPU",
@@ -62,6 +250,8 @@ public:
 			m_Height,
 			windowFlags
 		);
+		oldW = m_Width;
+		oldH = m_Height;
 
 		if (m_Window == nullptr)
 		{
@@ -71,30 +261,13 @@ public:
 
 		m_GlContext = SDL_GL_CreateContext(m_Window);
 		SDL_GL_MakeCurrent(m_Window, m_GlContext);
-		SDL_GL_SetSwapInterval(1);
+		SDL_GL_SetSwapInterval(0); // v-sync
 
 		if (gladLoadGL() == 0)
 		{
 			std::cout << "Failed to initialize OpenGL loader!" << std::endl;
 			return;
 		}
-
-		int32_t renderFlags = SDL_RENDERER_ACCELERATED;
-		m_Renderer = SDL_CreateRenderer(m_Window, -1, renderFlags);
-		if (!m_Renderer)
-		{
-			std::cout << "Could not create renderer: " << SDL_GetError() << std::endl;
-			return;
-		}
-
-		m_Texture = SDL_CreateTexture(m_Renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, TEXTURE_WIDTH, TEXTURE_HEIGHT);
-		if (!m_Texture)
-		{
-			std::cout << "Could not create texture from surface: " << SDL_GetError() << std::endl;
-			return;
-		}
-
-		m_PixelFormat = SDL_AllocFormat(SDL_PIXELFORMAT_RGBA8888);
 
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
@@ -105,10 +278,28 @@ public:
 
 		// Set the font
 		io.Fonts->AddFontDefault();
-
 		ImGui::StyleColorsDark();
 		ImGui_ImplSDL2_InitForOpenGL(m_Window, m_GlContext);
 		ImGui_ImplOpenGL3_Init(glsl_version);
+
+		// Create shaders/textures
+		quadShader.Create();
+		quadMesh.Create(quadShader);
+		quadTexture.Create();
+
+		quadShader.Use();
+		glUniform1i(glGetUniformLocation(quadShader.shaderProgram, "inTexture"), 0);
+
+		std::vector<std::string> lines;
+		lines.clear();
+		std::ifstream file(R"(D:\Portfolio\qcpu\qcpu-cpp\asm\pong.asm)");
+		std::string s;
+		while (getline(file, s))
+		{
+			lines.push_back(s);
+		}
+
+		m_TextEditor.SetTextLines(lines);
 	}
 
 	void Shutdown()
@@ -118,37 +309,36 @@ public:
 		ImGui::DestroyContext();
 
 		SDL_GL_DeleteContext(m_GlContext);
-		SDL_DestroyRenderer(m_Renderer);
 		SDL_DestroyWindow(m_Window);
 		SDL_Quit();
 	}
 
-	void Update(const Display& display, QCPU& cpu)
+	void Update(Display& display, QCPU& cpu)
 	{
-		UpdateDisplay(display);
-		UpdateCPU(cpu);
+		if (display.ShouldFlush())
+		{
+			glBindTexture(GL_TEXTURE_2D, quadTexture.inTexture);
+			glTexSubImage2D(
+				GL_TEXTURE_2D,					// target
+				0,								// mip level
+				0, 								// x offet
+				0, 								// y offset
+				TEXTURE_WIDTH, 					// width
+				TEXTURE_HEIGHT, 				// heigh
+				GL_BGRA, 						// format
+				GL_UNSIGNED_INT_8_8_8_8_REV, 	// type
+				display.GetPixels().data()		// pixels
+			);
+		}
+		UpdateUI(display, cpu);
 	}
 
 	void Render()
 	{
-		ImGui::Render();
-
-		ImGuiIO& io = ImGui::GetIO(); (void)io;
-		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-		glClearColor(114, 144, 154, 255);
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-		// Update and Render additional Platform Windows
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-		{
-			SDL_Window* backup_current_window = SDL_GL_GetCurrentWindow();
-			SDL_GLContext backup_current_context = SDL_GL_GetCurrentContext();
-			ImGui::UpdatePlatformWindows();
-			ImGui::RenderPlatformWindowsDefault();
-			SDL_GL_MakeCurrent(backup_current_window, backup_current_context);
-		}
-
+		RenderDisplay();
+		RenderUI();
 		SDL_GL_SwapWindow(m_Window);
 	}
 
@@ -158,23 +348,71 @@ public:
 		SDL_Event e;
 		int wheel = 0;
 
-		if (SDL_PollEvent(&e))
+		while (SDL_PollEvent(&e))
 		{
-			if (e.type == SDL_QUIT)
+			switch (e.type)
 			{
-				m_IsRunning = false;
-			}
-			else if (e.type == SDL_WINDOWEVENT)
-			{
-				if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+				case SDL_KEYDOWN:
 				{
-					io.DisplaySize.x = static_cast<float>(e.window.data1);
-					io.DisplaySize.y = static_cast<float>(e.window.data2);
+					switch (e.key.keysym.sym)
+					{
+						case SDLK_ESCAPE:
+						{
+							m_IsRunning = false;
+						}
+						break;
+					}
+
+					if (e.type == SDL_MOUSEWHEEL)
+					{
+						wheel = e.wheel.y;
+					}
 				}
-			}
-			else if (e.type == SDL_MOUSEWHEEL)
-			{
-				wheel = e.wheel.y;
+				break;
+
+				case SDL_WINDOWEVENT:
+				{
+					switch (e.window.event)
+					{
+						case SDL_WINDOWEVENT_CLOSE:
+						{
+							m_IsRunning = false;
+						}
+						break;
+
+						case SDL_WINDOWEVENT_SIZE_CHANGED:
+						{
+							float w = static_cast<float>(e.window.data1);
+							float h = static_cast<float>(e.window.data2);
+							io.DisplaySize.x = w;
+							io.DisplaySize.y = h;
+						}
+						break;
+
+						case SDL_WINDOWEVENT_RESIZED:
+						{
+							int newW = e.window.data1;
+							int newH = e.window.data2;
+
+							if (newW > oldW || newH > oldH)
+							{
+								newW = std::max(newW, newH);
+								newH = std::max(newW, newH);
+							}
+							else
+							{
+								newW = std::min(newW, newH);
+								newH = std::min(newW, newH);
+							}
+
+							oldW = newW;
+							oldH = newH;
+							SDL_SetWindowSize(m_Window, newW, newH);
+						}
+						break;
+					}
+				}
+				break;
 			}
 		}
 
@@ -198,48 +436,22 @@ public:
 	}
 
 private:
-	void UpdateDisplay(const Display& display)
-	{
-		// Get the size of the texture.
-		int w, h;
-		Uint32 format;
-		SDL_QueryTexture(m_Texture, &format, nullptr, &w, &h);
-
-		// Lock the texture, ready to set the pixels
-		uint8_t* pixels = nullptr;
-		int pitch = 0;
-		SDL_LockTexture(m_Texture, nullptr, reinterpret_cast<void**>(&pixels), &pitch);
-
-		// Update the texture
-		const std::vector<uint8_t>& src = display.GetPixels();
-		for (int32_t y = 0; y < h; y++)
-		{
-			int32_t		index = y * pitch;
-			uint32_t*	p = (uint32_t*)(pixels + pitch * y); // cast for a pointer increments by 4 bytes.(RGBA)
-			for (int32_t x = 0; x < w; x++)
-			{
-				*p = SDL_MapRGBA(m_PixelFormat,
-								 src[index + 0],
-								 src[index + 1],
-								 src[index + 2],
-								 src[index + 3]);
-				p++;
-				index += (sizeof(uint8_t) * 4);
-			}
-		}
-		// memcpy(pixels, src.data(), src.size());
-
-		// Finally, unlock the texture
-		SDL_UnlockTexture(m_Texture);
-	}
-
-	void UpdateCPU(QCPU& cpu)
+	void UpdateUI(Display& display, QCPU& cpu)
 	{
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplSDL2_NewFrame(m_Window);
 		ImGui::NewFrame();
 
-	#if 1
+		// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
+		{
+			static float f = 0.0f;
+			static int counter = 0;
+			ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+			ImGui::End();
+		}
+
+	#if 0
 		ImGui::ShowDemoWindow();
 	#endif
 
@@ -260,8 +472,9 @@ private:
 
 					for (size_t i = 0; i < 6; i++)
 					{
-						if (ImGui::MenuItem(files[i].c_str())) 
+						if (ImGui::MenuItem(files[i].c_str()))
 						{
+							display.Init();
 							cpu.Load(files[i].c_str());
 						}
 					}
@@ -275,13 +488,21 @@ private:
 			ImGui::EndMainMenuBar();
 		}
 
+	#if 0
 		if (ImGui::Begin("Display"))
 		{
-			ImGui::Image(m_Texture, ImVec2(TEXTURE_WIDTH, TEXTURE_HEIGHT));
+			ImGui::Image((ImTextureID)quadTexture.inTexture, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y));
 			ImGui::End();
 		}
+	#endif
 
+	#if 1
 		m_MemoryEditor.DrawWindow("Memory Editor", cpu.memory, 0xFFFF);
+	#endif
+
+	#if 1
+		m_TextEditor.Render("Text viewer");
+	#endif
 
 		if (ImGui::Begin("Debugger"))
 		{
@@ -336,9 +557,40 @@ private:
 
 			ImGui::Text("Flags");
 			ImGui::Text("Halt: %d", cpu.flags.halt);
-			ImGui::Text("Stop: %d", cpu.flags.stop);
+			ImGui::Text("Stop: %d", cpu.flags.exit);
 
 			ImGui::End();
+		}
+	}
+
+	void RenderDisplay()
+	{
+		// bind textures on corresponding texture units
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, quadTexture.inTexture);
+
+		quadShader.Use();
+
+		glBindVertexArray(quadMesh.vao);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+	}
+
+	void RenderUI()
+	{
+		ImGui::Render();
+
+		ImGuiIO& io = ImGui::GetIO(); (void)io;
+		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+		// Update and Render additional Platform Windows
+		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		{
+			SDL_Window* backup_current_window = SDL_GL_GetCurrentWindow();
+			SDL_GLContext backup_current_context = SDL_GL_GetCurrentContext();
+			ImGui::UpdatePlatformWindows();
+			ImGui::RenderPlatformWindowsDefault();
+			SDL_GL_MakeCurrent(backup_current_window, backup_current_context);
 		}
 	}
 
@@ -348,10 +600,13 @@ private:
 	bool						m_IsRunning;
 
 	MemoryEditor				m_MemoryEditor;
+	ImGui::Ext::TextEditor		m_TextEditor;
 
 	SDL_Window*					m_Window;
-	SDL_Renderer*				m_Renderer;
-	SDL_Texture*				m_Texture;
 	SDL_GLContext				m_GlContext;
-	SDL_PixelFormat*			m_PixelFormat;
+
+	Shader						quadShader;
+	Quad						quadMesh;
+	Texture						quadTexture;
+	int							oldW, oldH;
 };

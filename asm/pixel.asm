@@ -1,6 +1,6 @@
-mov x 32
-mov y 32
-mov a 64
-mov b 64
+mov x 16384
+mov y 16384
+mov a 32768
+mov b 32768
 sys 21
 ext 0
