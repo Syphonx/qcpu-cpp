@@ -182,12 +182,13 @@ struct MemoryEditor
     }
 
     // Standalone Memory Editor window
-    bool DrawWindow(const char* title, void* mem_data, size_t mem_size, size_t base_display_addr = 0x0000)
+    bool DrawWindow(const char* title, void* mem_data, size_t mem_size, bool* inOpen, size_t base_display_addr = 0x0000)
     {
         Sizes s;
         CalcSizes(s, mem_size, base_display_addr);
         ImGui::SetNextWindowSizeConstraints(ImVec2(0.0f, 0.0f), ImVec2(s.WindowWidth, FLT_MAX));
 
+        Open = inOpen;
         if (ImGui::Begin(title, &Open, ImGuiWindowFlags_NoScrollbar))
         {
             if (ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows) && ImGui::IsMouseReleased(ImGuiMouseButton_Right))
@@ -201,6 +202,7 @@ struct MemoryEditor
         }
         ImGui::End();
 
+        (*inOpen) = Open;
         return Open;
     }
 

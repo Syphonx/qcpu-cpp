@@ -6,6 +6,8 @@
 
 #include "display.h"
 #include "qcpu.h"
+#include "assembler.h"
+#include "os/filesystem.h"
 
 #include "gl/shader.h"
 #include "gl/quad.h"
@@ -18,6 +20,52 @@
 #include <imgui_internal.h>
 #include <imgui/ext/imgui_memory_editor.h>
 #include <imgui/ext/texteditor/imgui_texteditor.h>
+
+#include <cereal/cereal.hpp>
+#include <cereal/archives/json.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/types/unordered_map.hpp>
+
+class Debugger
+{
+public:
+	Debugger()
+	{
+	}
+
+	bool Load(const std::string& program)
+	{
+		FileReader reader;
+		std::string filename = program + ".debug";
+		
+		if (reader.Open(filename))
+		{
+			cereal::JSONInputArchive archive(reader.GetStream());
+			archive(info);
+		
+			return true;
+		}
+		
+		return false;
+	}
+
+	int32_t GetLine(const QCPU& cpu)
+	{
+		for (const TokenData& token : info.tokens)
+		{
+			if (token.address == cpu.pc)
+			{
+				return token.line;
+			}
+		}
+
+		return -1;
+	}
+
+private:
+
+	DebugInfo info;
+};
 
 class Platform
 {
@@ -34,6 +82,8 @@ public:
 	bool							IsRunning() const;
 
 private:
+	void							LoadProgram(Display& display, QCPU& cpu, const std::string& program);
+
 	void							UpdateUI(Display& display, QCPU& cpu);
 	void							RenderDisplay();
 	void							RenderUI();
@@ -44,7 +94,8 @@ private:
 	bool							m_IsRunning;
 
 	MemoryEditor					m_MemoryEditor;
-	ImGui::Ext::TextEditor			m_TextEditor;
+	TextEditor						m_TextEditor;
+	Debugger						m_Debugger;
 
 	SDL_Window*						m_Window;
 	SDL_GLContext					m_GlContext;

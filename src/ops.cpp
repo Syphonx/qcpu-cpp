@@ -4,8 +4,6 @@
 
 #include "qcpu.h"
 
-
-
 void QCPU::cpu_nop()
 {
 

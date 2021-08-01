@@ -3,12 +3,14 @@
 //
 
 #include "assembler.h"
+#include "os/filesystem.h"
 
 #define ASSERTF_DEF_ONCE
 #include "assertf.h"
 
 #include <iostream>
 #include <fstream>
+#include <assert.h>
 
 const std::vector<Opcode> Assembler::ops =
 {
@@ -148,15 +150,18 @@ std::vector<TokenData> Assembler::Tokenize()
 	std::vector<TokenData> tokens;
 	std::vector<std::string> labels;
 
-	int32_t			linen = 0;
-	int32_t			addrs = 0;
+	int32_t			line = 1;
+	int32_t			address = 0;
 	int32_t			index = 0;
 	int32_t			depth = 0;
 	std::string		token = "";
 
 	while (index <= fileText.size())
 	{
+		// Grab the character at [index]
 		std::string c(1, fileText[index]);
+
+		// If it's a ';' or a '#', consume until we hit a new line or the end of the file 
 		if (c == ";" || c == "#")
 		{
 			while (!(fileText[index] == '\n' || fileText[index] == '\0'))
@@ -181,137 +186,145 @@ std::vector<TokenData> Assembler::Tokenize()
 
 			if (c == "\\n")
 			{
-				linen++;
+				line++;
 			}
 		}
-		else if (regex_match(c, std::regex(R"(\s|\0)")))
+		else
 		{
-			if (c == "\n")
+			// Are we whitespace or at the end of the file?
+			if (regex_match(c, std::regex(R"(\s|\0)")))
 			{
-				linen++;
-			}
+				if (!token.empty())
+				{
+					ETokenType type = ETokenType::None;
 
-			if (!token.empty())
-			{
-				ETokenType type = ETokenType::None;
-
-				if (std::regex_match(token, opRegex))
-				{
-					type = ETokenType::Op;
-				}
-				else if (HasMatch(token, registerRegex))
-				{
-					type = ETokenType::Register;
-				}
-				else if (HasMatch(token, std::regex(R"(^\+|-$)", std::regex_constants::icase)))
-				{
-					type = ETokenType::ImmediateLabelReference;
-				}
-				else if (HasMatch(token, std::regex(R"(^[a-z]\w+$)", std::regex_constants::icase)))
-				{
-					type = ETokenType::ImmediateLabelReference;
-				}
-				else if (IsNumber(token))
-				{
-					type = ETokenType::Immediate;
-				}
-				else if (HasMatch(token, std::regex(R"(^\.\w+(?:\(.*\))$)", std::regex_constants::icase)))
-				{
-					type = ETokenType::Directive;
-				}
-				else if (HasMatch(token, std::regex(R"(^\$\w+$)", std::regex_constants::icase))
-						 && IsNumber(GetMatch(token, std::regex(R"(^\$(\w+)$)"), 1)))
-				{
-					type = ETokenType::Absolute;
-				}
-				else if (HasMatch(token, std::regex(R"(^\[\w*\]$)", std::regex_constants::icase))
-						 && std::regex_match(GetMatch(token, std::regex(R"(^\[(\w*)\]$)", std::regex_constants::icase), 1), registerRegex))
-				{
-					type = ETokenType::Indirect;
-				}
-				else if (std::regex_match(token, std::regex(R"(^\$(:\+|-)$)", std::regex_constants::icase)))
-				{
-					type = ETokenType::ImmediateLabelReference;
-				}
-				else if (std::regex_match(token, std::regex(R"(^\$[a-z]\w+$)", std::regex_constants::icase)))
-				{
-					type = ETokenType::AbsoluteLabelReference;
-				}
-				else
-				{
-					std::cout << "Unrecognised Token: " << "[" << token << "] on line " << linen << std::endl;
-				}
-
-				if (type == ETokenType::Directive)
-				{
-					// Directives are handles by assembler
-					std::regex		expr(R"(^[\.](\w+)(?:\((.*)\))$)", std::regex_constants::icase);
-					std::string		directive = ToLowercase(GetMatch(token, expr, 1));
-					std::string		argument = GetMatch(token, expr, 2);
-
-					if (directive == "org")
+					if (std::regex_match(token, opRegex))
 					{
-						if (IsNumber(argument))
-						{
-							addrs = ParseNumber(argument);
-						}
-						else
-						{
-							assertf(false, "The argument for a .org directive must be a numeric literal");
-						}
+						type = ETokenType::Op;
 					}
-					else if (directive == "text")
+					else if (HasMatch(token, registerRegex))
 					{
-						if (std::regex_match(argument, std::regex(R"(^'.*'$)")))
+						type = ETokenType::Register;
+					}
+					else if (HasMatch(token, std::regex(R"(^\+|-$)", std::regex_constants::icase)))
+					{
+						type = ETokenType::ImmediateLabelReference;
+					}
+					else if (HasMatch(token, std::regex(R"(^[a-z]\w+$)", std::regex_constants::icase)))
+					{
+						type = ETokenType::ImmediateLabelReference;
+					}
+					else if (IsNumber(token))
+					{
+						type = ETokenType::Immediate;
+					}
+					else if (HasMatch(token, std::regex(R"(^\.\w+(?:\(.*\))$)", std::regex_constants::icase)))
+					{
+						type = ETokenType::Directive;
+					}
+					else if (HasMatch(token, std::regex(R"(^\$\w+$)", std::regex_constants::icase))
+							 && IsNumber(GetMatch(token, std::regex(R"(^\$(\w+)$)"), 1)))
+					{
+						type = ETokenType::Absolute;
+					}
+					else if (HasMatch(token, std::regex(R"(^\[\w*\]$)", std::regex_constants::icase))
+							 && std::regex_match(GetMatch(token, std::regex(R"(^\[(\w*)\]$)", std::regex_constants::icase), 1), registerRegex))
+					{
+						type = ETokenType::Indirect;
+					}
+					else if (std::regex_match(token, std::regex(R"(^\$(:\+|-)$)", std::regex_constants::icase)))
+					{
+						type = ETokenType::ImmediateLabelReference;
+					}
+					else if (std::regex_match(token, std::regex(R"(^\$[a-z]\w+$)", std::regex_constants::icase)))
+					{
+						type = ETokenType::AbsoluteLabelReference;
+					}
+					else
+					{
+						std::cout << "Unrecognised Token: " << "[" << token << "] on line " << line << std::endl;
+					}
+
+					if (type == ETokenType::Directive)
+					{
+						// Directives are handles by assembler
+						std::regex		expr(R"(^[\.](\w+)(?:\((.*)\))$)", std::regex_constants::icase);
+						std::string		directive = ToLowercase(GetMatch(token, expr, 1));
+						std::string		argument = GetMatch(token, expr, 2);
+
+						if (directive == "org")
 						{
-							std::string temp = GetMatch(argument, std::regex("^'(.*)'$"), 1);
-							ReplaceText(temp, std::regex(R"(\n)"), R"(\n)");
-							for (const char byte : temp)
+							if (IsNumber(argument))
 							{
-								std::string s = std::to_string((uint16_t)byte);
-								tokens.emplace_back(ETokenType::Immediate, s, addrs, linen);
-								addrs++;
+								address = ParseNumber(argument);
+							}
+							else
+							{
+								assertf(false, "The argument for a .org directive must be a numeric literal");
+							}
+						}
+						else if (directive == "text")
+						{
+							if (std::regex_match(argument, std::regex(R"(^'.*'$)")))
+							{
+								std::string temp = GetMatch(argument, std::regex("^'(.*)'$"), 1);
+								ReplaceText(temp, std::regex(R"(\n)"), R"(\n)");
+								for (const char byte : temp)
+								{
+									std::string s = std::to_string((uint16_t)byte);
+									tokens.emplace_back(ETokenType::Immediate, s, address, line);
+									address++;
+								}
+							}
+							else
+							{
+								assertf(false, "the argument for .text directive must be a string surrounded by \'quote marks\'");
+							}
+						}
+						else if (directive == "ds")
+						{
+							if (IsNumber(argument))
+							{
+								address += ParseNumber(argument);
+							}
+							else
+							{
+								assertf(false, "The argument for a .ds directive must be a numeric literal");
 							}
 						}
 						else
 						{
-							assertf(false, "the argument for .text directive must be a string surrounded by \'quote marks\'");
+							assertf(false, "Unrecognised directive: %s", directive);
 						}
-					}
-					else if (directive == "ds")
-					{
-						if (IsNumber(argument))
-						{
-							addrs += ParseNumber(argument);
-						}
-						else
-						{
-							assertf(false, "The argument for a .ds directive must be a numeric literal");
-						}
+
+						token.clear();
 					}
 					else
 					{
-						assertf(false, "Unrecognised directive: %s", directive);
+						tokens.emplace_back(type, token, address, line);
+						token.clear();
+						address++;
 					}
-
+				}
+			
+				if (c == "\n")
+				{
+					line++;
+				}
+			}
+			else
+			{
+				// Are we build a label?
+				if (regex_match(c, std::regex(":")))
+				{
+					tokens.emplace_back(ETokenType::Label, token, address, line);
 					token.clear();
 				}
 				else
 				{
-					tokens.emplace_back(type, token, addrs, linen);
-					token.clear();
-					addrs++;
+					token += c; // still building a token...
 				}
 			}
-		}
-		else if (regex_match(c, std::regex(":")))
-		{
-			tokens.emplace_back(ETokenType::Label, token, addrs, linen);
-			token.clear();
-		}
-		else
-		{
-			token += c; // still building a token...
 		}
 
 		index++;
@@ -481,6 +494,30 @@ std::vector<uint8_t> Assembler::Assemble()
 	auto bytes = Write(converted);
 
 	return bytes;
+}
+
+void Assembler::AssembleAndSave(const std::string& filename)
+{
+	auto tokens = Tokenize();
+	auto labelTable = BuildLabelTable(tokens);
+	auto converted = Convert(tokens, labelTable);
+	auto bytes = Write(converted);
+
+	std::ofstream file(filename, std::ios::out | std::ios::binary);
+	if (!bytes.empty())
+	{
+		file.write(reinterpret_cast<const char*>(bytes.data()), bytes.size());
+	}
+
+	FileWriter writer;
+	if (writer.Open(filename + ".debug"))
+	{
+		DebugInfo debug;
+		cereal::JSONOutputArchive archive(writer.GetStream());
+		debug.tokens = tokens;
+		debug.labels = labelTable;
+		archive(cereal::make_nvp("debug", debug));
+	}
 }
 
 void Assembler::Load(const std::string& in)

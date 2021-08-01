@@ -121,7 +121,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)include;$(ProjectDir)ext\SDL2\include;$(ProjectDir)ext\assertf;$(ProjectDir)ext\imgui;$(ProjectDir)ext\glad\include;$(ProjectDir)ext;$(ProjectDir)ext\imgui\ext\texteditor;$(ProjectDir)ext\spdlog\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)include;$(ProjectDir)ext\SDL2\include;$(ProjectDir)ext\assertf;$(ProjectDir)ext\imgui;$(ProjectDir)ext\glad\include;$(ProjectDir)ext;$(ProjectDir)ext\imgui\ext\texteditor;$(ProjectDir)ext\spdlog\include;$(ProjectDir)ext\cereal\include</AdditionalIncludeDirectories>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
@@ -152,7 +152,7 @@
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(ProjectDir)include;$(ProjectDir)ext\SDL2\include;$(ProjectDir)ext\assertf;$(ProjectDir)ext\imgui;$(ProjectDir)ext\glad\include;$(ProjectDir)ext;$(ProjectDir)ext\imgui\ext\texteditor;$(ProjectDir)ext\spdlog\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)include;$(ProjectDir)ext\SDL2\include;$(ProjectDir)ext\assertf;$(ProjectDir)ext\imgui;$(ProjectDir)ext\glad\include;$(ProjectDir)ext;$(ProjectDir)ext\imgui\ext\texteditor;$(ProjectDir)ext\spdlog\include;$(ProjectDir)ext\cereal\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -184,6 +184,7 @@
     <ClCompile Include="src\gl\texture.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\ops.cpp" />
+    <ClCompile Include="src\os\filesystem.cpp" />
     <ClCompile Include="src\platform.cpp" />
     <ClCompile Include="src\qcpu.cpp" />
   </ItemGroup>
@@ -205,6 +206,7 @@
     <ClInclude Include="include\gl\quad.h" />
     <ClInclude Include="include\gl\shader.h" />
     <ClInclude Include="include\gl\texture.h" />
+    <ClInclude Include="include\os\filesystem.h" />
     <ClInclude Include="include\platform.h" />
     <ClInclude Include="include\qcpu.h" />
     <ClInclude Include="include\timer.h" />

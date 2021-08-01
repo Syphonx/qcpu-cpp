@@ -4,6 +4,7 @@
 
 #include "application.h"
 #include "constants.h"
+#include "os/filesystem.h"
 
 #include <fstream>
 
@@ -19,24 +20,14 @@ Application::Application(const std::string& filename)
 {
 	Bind();
 
-	std::ifstream file(R"(D:\Portfolio\qcpu\qcpu-cpp\assets\bottles.txt)", std::ios::binary);
-	file.unsetf(std::ios::skipws);
-
-	std::streampos fileSize;
-	file.seekg(0, std::ios::end);
-	fileSize = file.tellg();
-	file.seekg(0, std::ios::beg);
-	if (fileSize <= 0)
+	FileReader reader;
+	if (reader.Open(R"(D:\Portfolio\qcpu\qcpu-cpp\assets\bottles.txt)", std::ifstream::in))
 	{
-		return;
+		bfinput.resize(reader.GetLength());
+		reader.Read(reader.GetLength(), bfinput);
 	}
 
-	bfinput.reserve(fileSize);
-	bfinput.insert(bfinput.begin(),
-					std::istream_iterator<char>(file),
-					std::istream_iterator<char>());
-
-	outputfile = std::fstream("output.txt", std::ios::out);
+	outputfile = std::fstream("log.txt", std::ios::out);
 }
 
 Application::~Application()
@@ -174,7 +165,7 @@ void Application::Update()
 		double elapsed = m_BenchTimer.ElapsedMilliSeconds();
 
 		outputfile.close(); 
-		std::ifstream f("output.txt");
+		std::ifstream f("log.txt");
 		std::cout << f.rdbuf();
 
 		printf("\n");

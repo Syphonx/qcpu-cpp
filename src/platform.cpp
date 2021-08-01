@@ -3,12 +3,14 @@
 //
 
 #include "platform.h"
+#include "constants.h"
+#include "os/filesystem.h"
 
 #include <glad/glad.h>
-
+#include <filesystem>
 #include <imgui/backends/imgui_impl_sdl.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
-#include "constants.h"
+#include "assembler.h"
 
 Platform::Platform(uint16_t width, uint16_t height)
 	: m_Width(width)
@@ -71,33 +73,53 @@ void Platform::Init()
 	ImGui::CreateContext();
 
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-	// Set the font
+	// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+	ImGuiStyle& style = ImGui::GetStyle();
+	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+	{
+		style.WindowRounding = 0.0f;
+		style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+	}
+
 	io.Fonts->AddFontDefault();
 	ImGui::StyleColorsDark();
 	ImGui_ImplSDL2_InitForOpenGL(m_Window, m_GlContext);
 	ImGui_ImplOpenGL3_Init(glsl_version);
 
-	// Create shaders/textures
 	m_QuadShader.Create(R"(D:\Portfolio\qcpu\qcpu-cpp\assets\shaders\quad.vs)", R"(D:\Portfolio\qcpu\qcpu-cpp\assets\shaders\quad.fs)");
 	m_QuadMesh.Create(m_QuadShader);
 	m_QuadTexture.Create();
-
 	m_QuadShader.Use();
 	m_QuadShader.SetInt("inTexture", 0);
 
-	std::vector<std::string> lines;
-	lines.clear();
-	std::ifstream file(R"(D:\Portfolio\qcpu\qcpu-cpp\asm\pong.asm)");
-	std::string s;
-	while (getline(file, s))
+	TextEditor::LanguageDefinition lang = TextEditor::LanguageDefinition::QASM();
+	for (const Opcode& op : Assembler::ops)
 	{
-		lines.push_back(s);
+		lang.mKeywords.insert(op.name);
 	}
 
-	m_TextEditor.SetTextLines(lines);
+	for (const RegisterData& reg : Assembler::registers)
+	{
+		TextEditor::Identifier id;
+		id.mDeclaration = "Built-in register";
+		lang.mIdentifiers.insert(std::make_pair(std::string(reg.name), id));
+	}
+
+	static const char* const s_Directives[] = {
+		".text", ".org", ".ds"
+	};
+
+	for (auto& directive : s_Directives)
+	{
+		lang.mKeywords.insert(directive);
+	}
+
+	m_TextEditor.SetLanguageDefinition(lang);
+	m_TextEditor.SetReadOnly(false);
 }
 
 void Platform::Shutdown()
@@ -148,6 +170,8 @@ void Platform::PumpEvents()
 
 	while (SDL_PollEvent(&e))
 	{
+		ImGui_ImplSDL2_ProcessEvent(&e);
+
 		switch (e.type)
 		{
 			case SDL_KEYDOWN:
@@ -159,11 +183,6 @@ void Platform::PumpEvents()
 						m_IsRunning = false;
 					}
 					break;
-				}
-
-				if (e.type == SDL_MOUSEWHEEL)
-				{
-					wheel = e.wheel.y;
 				}
 			}
 			break;
@@ -220,7 +239,6 @@ void Platform::PumpEvents()
 	io.MousePos = ImVec2(static_cast<float>(mouseX), static_cast<float>(mouseY));
 	io.MouseDown[0] = buttons & SDL_BUTTON(SDL_BUTTON_LEFT);
 	io.MouseDown[1] = buttons & SDL_BUTTON(SDL_BUTTON_RIGHT);
-	io.MouseWheel = static_cast<float>(wheel);
 #endif
 }
 
@@ -234,46 +252,62 @@ bool Platform::IsRunning() const
 	return m_IsRunning;
 }
 
+void Platform::LoadProgram(Display& display, QCPU& cpu, const std::string& program)
+{
+	display.Init();
+	cpu.Load(program.c_str());
+}
+
 void Platform::UpdateUI(Display& display, QCPU& cpu)
 {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplSDL2_NewFrame(m_Window);
 	ImGui::NewFrame();
 
-	// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
+	static bool s_ShowDemoWindow = false;
+	static bool s_ShowFpsWindow = true;
+	static bool s_ShowDisplayWindow = false;
+	static bool s_ShowMemoryWindow = false;
+	static bool s_ShowTextWindow = true;
+	static bool s_ShowDebugWindow = true;
+	static bool s_ShowCPUWindow = true;
+
+	static bool s_DebuggerAttached = false;
+
+	if (s_ShowDemoWindow)
+	{
+		ImGui::ShowDemoWindow(&s_ShowDemoWindow);
+	}
+
+	if (s_ShowFpsWindow)
 	{
 		static float f = 0.0f;
 		static int counter = 0;
-		ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		if (ImGui::Begin("Hello, world!", &s_ShowFpsWindow))
+		{
+			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		}
 		ImGui::End();
 	}
-
-#if 0
-	ImGui::ShowDemoWindow();
-#endif
 
 	if (ImGui::BeginMainMenuBar())
 	{
 		if (ImGui::BeginMenu("File"))
 		{
-			if (ImGui::BeginMenu("Open Recent"))
+			if (ImGui::BeginMenu("Run"))
 			{
-				static std::string files[6] = {
-					"programs/bf",
-					"programs/bitcount",
-					"programs/colortest",
-					"programs/pixel",
-					"programs/pong",
-					"programs/testbench"
-				};
-
-				for (size_t i = 0; i < 6; i++)
+				std::vector<std::string> programs;
+				for (const auto& entry : std::filesystem::directory_iterator("programs"))
 				{
-					if (ImGui::MenuItem(files[i].c_str()))
+					const std::filesystem::path& path = entry.path();
+					programs.push_back(path.string());
+				}
+
+				for (auto& program : programs)
+				{
+					if (ImGui::MenuItem(program.c_str()))
 					{
-						display.Init();
-						cpu.Load(files[i].c_str());
+						LoadProgram(display, cpu, program);
 					}
 				}
 
@@ -283,80 +317,261 @@ void Platform::UpdateUI(Display& display, QCPU& cpu)
 			ImGui::EndMenu();
 		}
 
+		if (ImGui::BeginMenu("Windows"))
+		{
+			ImGui::MenuItem("Show Demo Window", nullptr, &s_ShowDemoWindow);
+			ImGui::MenuItem("Show Fps Window", nullptr, &s_ShowFpsWindow);
+			ImGui::MenuItem("Show Display Window", nullptr, &s_ShowDisplayWindow);
+			ImGui::MenuItem("Show Memory Window", nullptr, &s_ShowMemoryWindow);
+			ImGui::MenuItem("Show Text Window", nullptr, &s_ShowTextWindow);
+			ImGui::MenuItem("Show Debug Window", nullptr, &s_ShowDebugWindow);
+			ImGui::MenuItem("Show CPU Window", nullptr, &s_ShowCPUWindow);
+
+			ImGui::EndMenu();
+		}
+
 		ImGui::EndMainMenuBar();
 	}
 
-#if 0
-	if (ImGui::Begin("Display"))
+	if (s_ShowMemoryWindow)
 	{
-		ImGui::Image((ImTextureID)quadTexture.inTexture, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y));
-		ImGui::End();
-	}
-#endif
-
-#if 1
-	m_MemoryEditor.DrawWindow("Memory Editor", cpu.memory, 0xFFFF);
-#endif
-
-#if 1
-	m_TextEditor.Render("Text viewer");
-#endif
-
-	if (ImGui::Begin("Debugger"))
-	{
-		if (cpu.flags.halt == 0)
-		{
-			if (ImGui::Button("Pause"))
-			{
-				cpu.flags.halt = 1;
-			}
-		}
-		else
-		{
-			if (ImGui::Button("Continue"))
-			{
-				cpu.flags.halt = 0;
-			}
-		}
-
-		if (cpu.flags.halt == 0)
-		{
-			ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-		}
-
-		ImGui::SameLine();
-
-		if (ImGui::Button("Step"))
-		{
-			cpu.Step();
-		}
-
-		if (cpu.flags.halt == 0)
-		{
-			ImGui::PopItemFlag();
-			ImGui::PopStyleVar();
-		}
-
-		ImGui::End();
+		m_MemoryEditor.DrawWindow("Memory Editor", cpu.memory, 0xFFFF, &s_ShowMemoryWindow);
 	}
 
-	if (ImGui::Begin("CPU"))
+	if (s_ShowTextWindow)
 	{
-		ImGui::Text("PC: %d", cpu.pc);
+		auto cpos = m_TextEditor.GetCursorPosition();
+		if (ImGui::Begin("Text Editor", &s_ShowTextWindow, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar))
+		{
+			static std::string s_CurrentProgramName;
+			static std::string s_CurrentProgramPath;
 
-		ImGui::Text("Registers");
-		ImGui::Text("A: %d", cpu.registers.a); ImGui::SameLine();
-		ImGui::Text("B: %d", cpu.registers.b); ImGui::SameLine();
-		ImGui::Text("C: %d", cpu.registers.c); ImGui::SameLine();
-		ImGui::Text("D: %d", cpu.registers.d);
-		ImGui::Text("X: %d", cpu.registers.x); ImGui::SameLine();
-		ImGui::Text("Y: %d", cpu.registers.y);
+			ImGui::SetWindowSize(ImVec2(800, 600), ImGuiCond_FirstUseEver);
+			if (ImGui::BeginMenuBar())
+			{
+				if (ImGui::BeginMenu("File"))
+				{
+					if (ImGui::MenuItem("Save", nullptr, false, !s_CurrentProgramPath.empty()))
+					{
+						FileWriter writer;
+						if (writer.Open(s_CurrentProgramPath))
+						{
+							writer.Write(m_TextEditor.GetText());
+						}
+					}
 
-		ImGui::Text("Flags");
-		ImGui::Text("Halt: %d", cpu.flags.halt);
-		ImGui::Text("Stop: %d", cpu.flags.exit);
+					if (ImGui::BeginMenu("Open"))
+					{
+						std::vector<std::string> programNames;
+						std::vector<std::string> programPaths;
+						for (const auto& entry : std::filesystem::directory_iterator("asm"))
+						{
+							const std::filesystem::path& path = entry.path();
+							programNames.push_back(path.filename().replace_extension("").string());
+							programPaths.push_back(path.string());
+						}
 
+						for (int32_t i = 0; i < programPaths.size(); i++)
+						{
+							if (ImGui::MenuItem(programNames[i].c_str()))
+							{
+								FileReader reader;
+								std::vector<std::string> lines;
+								if (reader.Open(programPaths[i]))
+								{
+									reader.ReadLines(lines);
+								}
+								s_CurrentProgramPath = programPaths[i];
+								s_CurrentProgramName = programNames[i];
+
+								s_DebuggerAttached = false;
+								m_TextEditor.SetTextLines(lines);
+							}
+						}
+
+						ImGui::EndMenu();
+					}
+
+					ImGui::EndMenu();
+				}
+
+				if (ImGui::BeginMenu("Edit"))
+				{
+					bool ro = m_TextEditor.IsReadOnly();
+					if (ImGui::MenuItem("Read-only mode", nullptr, &ro))
+						m_TextEditor.SetReadOnly(ro);
+					ImGui::Separator();
+
+					if (ImGui::MenuItem("Undo", "ALT-Backspace", nullptr, !ro && m_TextEditor.CanUndo()))
+						m_TextEditor.Undo();
+					if (ImGui::MenuItem("Redo", "Ctrl-Y", nullptr, !ro && m_TextEditor.CanRedo()))
+						m_TextEditor.Redo();
+
+					ImGui::Separator();
+
+					if (ImGui::MenuItem("Copy", "Ctrl-C", nullptr, m_TextEditor.HasSelection()))
+						m_TextEditor.Copy();
+					if (ImGui::MenuItem("Cut", "Ctrl-X", nullptr, !ro && m_TextEditor.HasSelection()))
+						m_TextEditor.Cut();
+					if (ImGui::MenuItem("Delete", "Del", nullptr, !ro && m_TextEditor.HasSelection()))
+						m_TextEditor.Delete();
+					if (ImGui::MenuItem("Paste", "Ctrl-V", nullptr, !ro && ImGui::GetClipboardText() != nullptr))
+						m_TextEditor.Paste();
+
+					ImGui::Separator();
+
+					if (ImGui::MenuItem("Select all", nullptr, nullptr))
+						m_TextEditor.SetSelection(TextEditor::Coordinates(), TextEditor::Coordinates(m_TextEditor.GetTotalLines(), 0));
+
+					ImGui::EndMenu();
+				}
+
+				if (ImGui::BeginMenu("Assemble", !s_CurrentProgramName.empty()))
+				{
+					bool build = false;
+					bool run = false;
+
+					if (ImGui::MenuItem("Build"))
+					{
+						build = true;
+					}
+
+					if (ImGui::MenuItem("Build & Run"))
+					{
+						build = true;
+						run = true;
+					}
+
+					if (build)
+					{
+						Assembler avengers(s_CurrentProgramPath);
+						const std::vector<uint8_t>& text = avengers.Assemble();
+
+						std::string newFile = "programs/" + s_CurrentProgramName;
+						std::ofstream file(newFile, std::ios::out | std::ios::binary);
+						if (!text.empty())
+						{
+							file.write(reinterpret_cast<const char*>(text.data()), text.size());
+						}
+
+						if (run)
+						{
+							LoadProgram(display, cpu, newFile);
+						}
+
+						build = false;
+						run = false;
+					}
+
+					ImGui::EndMenu();
+				}
+
+				if (ImGui::BeginMenu("Debug", !s_CurrentProgramName.empty()))
+				{
+					if (ImGui::MenuItem("Attach"))
+					{
+						if (m_Debugger.Load("programs/" + s_CurrentProgramName))
+						{
+							s_DebuggerAttached = true;
+						}
+					}
+
+					ImGui::EndMenu();
+				}
+
+				ImGui::EndMenuBar();
+			}
+
+			ImGui::Text("%6d/%-6d %6d lines  | %s | %s | %s | %s", cpos.mLine + 1, cpos.mColumn + 1, m_TextEditor.GetTotalLines(),
+						m_TextEditor.IsOverwrite() ? "Ovr" : "Ins",
+						m_TextEditor.CanUndo() ? "*" : " ",
+						m_TextEditor.GetLanguageDefinition().mName.c_str(), s_CurrentProgramName.c_str());
+
+			m_TextEditor.Render("Text viewer");
+		}
+
+		ImGui::End();
+	}
+
+	if (s_ShowDebugWindow)
+	{
+		if (ImGui::Begin("Debugger", &s_ShowDebugWindow))
+		{
+			if (cpu.flags.halt == 0)
+			{
+				if (ImGui::Button("Pause"))
+				{
+					cpu.flags.halt = 1;
+				}
+			}
+			else
+			{
+				if (ImGui::Button("Continue"))
+				{
+					cpu.flags.halt = 0;
+				}
+			}
+
+			if (cpu.flags.halt == 0)
+			{
+				ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+				ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+			}
+
+			ImGui::SameLine();
+
+			if (ImGui::Button("Step"))
+			{
+				cpu.Step();
+				
+				if (s_DebuggerAttached)
+				{
+					int32_t line = m_Debugger.GetLine(cpu);
+					TextEditor::Coordinates coord(line-1, 0);
+					TextEditor::Breakpoints bpts;
+					bpts.insert(line);
+					m_TextEditor.SetBreakpoints(bpts);
+					m_TextEditor.SetCursorPosition(coord);
+				}
+			}
+
+			if (cpu.flags.halt == 0)
+			{
+				ImGui::PopItemFlag();
+				ImGui::PopStyleVar();
+			}
+		}
+		ImGui::End();
+	}
+
+	if (s_DebuggerAttached)
+	{
+		int32_t line = m_Debugger.GetLine(cpu);
+		TextEditor::Coordinates coord(line - 1, 0);
+		TextEditor::Breakpoints bpts;
+		bpts.insert(line);
+		m_TextEditor.SetBreakpoints(bpts);
+		m_TextEditor.SetCursorPosition(coord);
+	}
+
+	if (s_ShowCPUWindow)
+	{
+		if (ImGui::Begin("CPU", &s_ShowCPUWindow))
+		{
+			ImGui::Text("PC: %d", cpu.pc);
+
+			ImGui::Text("Registers");
+			ImGui::Text("A: %d", cpu.registers.a); ImGui::SameLine();
+			ImGui::Text("B: %d", cpu.registers.b); ImGui::SameLine();
+			ImGui::Text("C: %d", cpu.registers.c); ImGui::SameLine();
+			ImGui::Text("D: %d", cpu.registers.d);
+			ImGui::Text("X: %d", cpu.registers.x); ImGui::SameLine();
+			ImGui::Text("Y: %d", cpu.registers.y);
+
+			ImGui::Text("Flags");
+			ImGui::Text("Halt: %d", cpu.flags.halt);
+			ImGui::Text("Stop: %d", cpu.flags.exit);
+		}
 		ImGui::End();
 	}
 }

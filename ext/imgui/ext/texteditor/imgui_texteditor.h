@@ -10,10 +10,6 @@
 #include <regex>
 #include "imgui.h"
 
-namespace ImGui
-{
-namespace Ext
-{
 class TextEditor
 {
 public:
@@ -184,6 +180,7 @@ public:
 		static const LanguageDefinition& SQL();
 		static const LanguageDefinition& AngelScript();
 		static const LanguageDefinition& Lua();
+		static const LanguageDefinition& QASM();
 	};
 
 	TextEditor();
@@ -391,5 +388,3 @@ private:
 
 	float mLastClick;
 };
-}
-}

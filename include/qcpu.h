@@ -87,7 +87,7 @@ struct OpArgs
 struct Flags
 {
 	Flags()
-		: halt(0)
+		: halt(1)
 		, exit(-1)
 		, blok(false)
 	{

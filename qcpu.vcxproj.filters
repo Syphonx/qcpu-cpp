@@ -34,6 +34,12 @@
     <Filter Include="Source Files\gl">
       <UniqueIdentifier>{4551c2a7-6eca-46b9-a9ce-0de727eb9365}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\os">
+      <UniqueIdentifier>{2a3c7ff6-dc4a-4522-b184-b2ee32dd24f0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\os">
+      <UniqueIdentifier>{a9174834-50bc-485a-9266-c5b9214d45ad}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ext\imgui\imgui.cpp">
@@ -92,6 +98,9 @@
     </ClCompile>
     <ClCompile Include="src\ops.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\os\filesystem.cpp">
+      <Filter>Source Files\os</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -154,6 +163,9 @@
     </ClInclude>
     <ClInclude Include="include\constants.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\os\filesystem.h">
+      <Filter>Header Files\os</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

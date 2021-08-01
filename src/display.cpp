@@ -207,7 +207,6 @@ uint16_t Display::WrapPixel(uint16_t pixel)
 		case EDisplayMode::Vectron:
 		{
 			return static_cast<uint16_t>((static_cast<float>(pixel) / static_cast<float>(65536)) * static_cast<float>(m_Width));
-			// return pixel % m_Width;
 		}
 		break;
 	}
@@ -243,9 +242,9 @@ void Display::DrawPixel(uint16_t x, uint16_t y)
 void Display::DrawPixel(uint16_t x, uint16_t y, uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 {
 	const uint32_t offset = GetIndex(x, y);
-	m_Pixels[offset + 0] = b;				// b
-	m_Pixels[offset + 1] = g;				// g
-	m_Pixels[offset + 2] = r;				// r
-	m_Pixels[offset + 3] = a;				// a
+	m_Pixels[offset + 0] = b;
+	m_Pixels[offset + 1] = g;
+	m_Pixels[offset + 2] = r;
+	m_Pixels[offset + 3] = a;
 }
 

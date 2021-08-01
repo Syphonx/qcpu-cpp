@@ -9,6 +9,11 @@
 #include <unordered_map>
 #include <regex>
 
+#include <cereal/cereal.hpp>
+#include <cereal/archives/json.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/types/unordered_map.hpp>
+
 enum class ETokenType : uint8_t
 {
 	None,
@@ -25,12 +30,25 @@ enum class ETokenType : uint8_t
 
 struct TokenData
 {
+	TokenData()
+	{
+	}
+
 	TokenData(const ETokenType type, const std::string& data, const int32_t address, const int32_t line)
 		: type(type)
 		, data(data)
 		, address(address)
 		, line(line)
 	{
+	}
+
+	template<class Archive>
+	void serialize(Archive& archive)
+	{
+		archive(cereal::make_nvp("type", type));
+		archive(cereal::make_nvp("data", data));
+		archive(cereal::make_nvp("address", address));
+		archive(cereal::make_nvp("line", line));
 	}
 
 	ETokenType					type;
@@ -65,6 +83,25 @@ struct RegisterData
 	uint16_t					value;
 };
 
+struct DebugInfo
+{
+	DebugInfo()
+		: tokens()
+		, labels()
+	{
+	}
+
+	template<class Archive>
+	void serialize(Archive& archive)
+	{
+		archive(cereal::make_nvp("tokens", tokens));
+		archive(cereal::make_nvp("labels", labels));
+	}
+
+	std::vector<TokenData> tokens;
+	std::unordered_map<std::string, int32_t> labels;
+};
+
 class Assembler
 {
 public:
@@ -89,6 +126,7 @@ public:
 	std::vector<uint16_t>			Convert(const std::vector<TokenData>& tokens, const std::unordered_map<std::string, int32_t>& labels);
 	std::vector<uint8_t>			Write(const std::vector<uint16_t>& converted);
 	std::vector<uint8_t>			Assemble();
+	void							AssembleAndSave(const std::string& filename);
 	void							Load(const std::string& in);
 
 private:

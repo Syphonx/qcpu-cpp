@@ -32,7 +32,7 @@ end: 0
 alphabet_map: .ds(30)
 
 text: 
-    .text('hello ') 2 .text('jak') 1 10
+    .text('hello ') 2 .text('dan') 1 10
     .text('here is my text rendering') 10
     .text('code using a font i made') 10
     10
