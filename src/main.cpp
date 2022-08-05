@@ -1,5 +1,5 @@
 //
-// qcpu c++ version
+//	qcpu c++ version
 //
 
 #include "application.h"

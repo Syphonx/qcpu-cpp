@@ -7,9 +7,10 @@
 class Texture
 {
 public:
-									Texture();
 
-	void							Create();
+	Texture();
 
-	uint32_t						m_Id;
+	void Create();
+
+	uint32_t m_Id;
 };

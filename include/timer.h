@@ -6,30 +6,30 @@
 
 struct Timer
 {
-	Uint64	Last;
+	Uint64 last;
 
 	Timer()
 	{
 		Reset();
 	}
 
-	double	ElapsedSeconds()
+	double ElapsedSeconds()
 	{
-		return	(double)(((Now() - Last) * 1000 / (double)SDL_GetPerformanceFrequency()) * 0.001);
+		return	(double)(((Now() - last) * 1000 / (double)SDL_GetPerformanceFrequency()) * 0.001);
 	}
 
-	double	ElapsedMilliSeconds()
+	double ElapsedMilliSeconds()
 	{
-		return	(double)((Now() - Last) * 1000 / (double)SDL_GetPerformanceFrequency());
+		return	(double)((Now() - last) * 1000 / (double)SDL_GetPerformanceFrequency());
 	}
 
-	Uint64	Now()
+	Uint64 Now()
 	{
 		return SDL_GetPerformanceCounter();
 	}
 
-	void	Reset()
+	void Reset()
 	{
-		Last = Now();
+		last = Now();
 	}
 };

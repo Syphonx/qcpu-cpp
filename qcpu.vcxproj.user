@@ -3,6 +3,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LocalDebuggerCommandArguments>D:\Portfolio\qcpu\qcpu-cpp\programs\font</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <RemoteDebuggerCommandArguments>D:\Portfolio\qcpu\qcpu-cpp\programs\font</RemoteDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LocalDebuggerCommandArguments>D:\Portfolio\qcpu\qcpu-cpp\programs\bf</LocalDebuggerCommandArguments>

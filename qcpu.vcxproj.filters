@@ -168,4 +168,12 @@
       <Filter>Header Files\os</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\shaders\quad.fs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="assets\shaders\quad.vs">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>

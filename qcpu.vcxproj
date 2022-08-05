@@ -211,6 +211,10 @@
     <ClInclude Include="include\qcpu.h" />
     <ClInclude Include="include\timer.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\shaders\quad.fs" />
+    <None Include="assets\shaders\quad.vs" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

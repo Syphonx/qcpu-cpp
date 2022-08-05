@@ -29,6 +29,7 @@
 class Debugger
 {
 public:
+
 	Debugger()
 	{
 	}
@@ -70,40 +71,43 @@ private:
 class Platform
 {
 public:
-									Platform(uint16_t width, uint16_t height);
+	
+	Platform(uint16_t width, uint16_t height);
 
-	void							Init();
-	void							Shutdown();
-	void							Update(Display& display, QCPU& cpu);
-	void							Render();
-	void							PumpEvents();
+	void Init();
+	void Shutdown();
+	void Update(Display& display, QCPU& cpu);
+	void Render();
+	void PumpEvents();
 
-	double							GetTime() const;
-	bool							IsRunning() const;
-
-private:
-	void							LoadProgram(Display& display, QCPU& cpu, const std::string& program);
-
-	void							UpdateUI(Display& display, QCPU& cpu);
-	void							RenderDisplay();
-	void							RenderUI();
+	double GetTime() const;
+	bool IsRunning() const;
 
 private:
-	int32_t							m_Width;
-	int32_t							m_Height;
-	bool							m_IsRunning;
 
-	MemoryEditor					m_MemoryEditor;
-	TextEditor						m_TextEditor;
-	Debugger						m_Debugger;
+	void LoadProgram(Display& display, QCPU& cpu, const std::string& program);
 
-	SDL_Window*						m_Window;
-	SDL_GLContext					m_GlContext;
+	void UpdateUI(Display& display, QCPU& cpu);
+	void RenderDisplay();
+	void RenderUI();
 
-	Shader							m_QuadShader;
-	Quad							m_QuadMesh;
-	Texture							m_QuadTexture;
+private:
 
-	int32_t							m_OldWidth;
-	int32_t							m_OldHeight;
+	int32_t m_Width;
+	int32_t m_Height;
+	bool m_IsRunning;
+
+	MemoryEditor m_MemoryEditor;
+	TextEditor m_TextEditor;
+	Debugger m_Debugger;
+
+	SDL_Window* m_Window;
+	SDL_GLContext m_GlContext;
+
+	Shader m_QuadShader;
+	Quad m_QuadMesh;
+	Texture m_QuadTexture;
+
+	int32_t m_OldWidth;
+	int32_t m_OldHeight;
 };

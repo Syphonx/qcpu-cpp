@@ -15,37 +15,39 @@
 class Application
 {
 public:
-									Application(const std::string& filename);
-									~Application();
 
-	int32_t							Run();
+	Application(const std::string& filename);
+	~Application();
 
-	void							Bind();
-	void							Bind_0x06();
-	void							Bind_0x07();
-	void							Bind_0x15();
-	void							Bind_0x16();
-	void							Bind_0x17();
-	void							Bind_0x18();
-	void							Bind_0x19();
-	void							Bind_0x20();
-	void							Bind_0x0B();
-	void							Bind_0x0C();
+	int32_t Run();
 
-	void							Update();
-	void							Render();
+	void Bind();
+	void Bind_0x06();
+	void Bind_0x07();
+	void Bind_0x15();
+	void Bind_0x16();
+	void Bind_0x17();
+	void Bind_0x18();
+	void Bind_0x19();
+	void Bind_0x20();
+	void Bind_0x0B();
+	void Bind_0x0C();
 
-	bool							IsRunning() const;
-	QCPU&							GetCpu();
+	void Update();
+	void Render();
+
+	bool IsRunning() const;
+	QCPU& GetCpu();
 
 private:
-	Timer							m_BenchTimer;
-	Timer							m_Timer;
-	QCPU							m_Cpu;
-	Platform						m_Platform;
-	Display							m_Display;
 
-	std::fstream					outputfile;
-	std::string						m_Filename;
-	bool							m_IsRunning;
+	Timer m_BenchTimer;
+	Timer m_Timer;
+	QCPU m_Cpu;
+	Platform m_Platform;
+	Display m_Display;
+
+	std::fstream outputfile;
+	std::string m_Filename;
+	bool m_IsRunning;
 };

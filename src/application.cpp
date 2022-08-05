@@ -21,7 +21,7 @@ Application::Application(const std::string& filename)
 	Bind();
 
 	FileReader reader;
-	if (reader.Open(R"(D:\Portfolio\qcpu\qcpu-cpp\assets\bottles.txt)", std::ifstream::in))
+	if (reader.Open(R"(assets\bottles.txt)", std::ifstream::in))
 	{
 		bfinput.resize(reader.GetLength());
 		reader.Read(reader.GetLength(), bfinput);

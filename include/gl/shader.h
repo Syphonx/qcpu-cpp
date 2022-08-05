@@ -18,37 +18,37 @@ class Shader
 
 public:
 
-	static ShaderProgram	InvalidProgram;
-	static Shader*			DefaultShader;
+	static ShaderProgram InvalidProgram;
+	static Shader* DefaultShader;
 
 	Shader();
 	Shader(const std::string& vertexPath, const std::string& fragmentPath);
 	~Shader();
 
-	void					Use() const;
-	void					Create(const std::string& vertexPath, const std::string& fragmentPath);
+	void Use() const;
+	void Create(const std::string& vertexPath, const std::string& fragmentPath);
 
-	void					SetBool(const std::string& name, bool value) const;
-	void					SetInt(const std::string& name, int value) const;
-	void					SetFloat(const std::string& name, float value) const;
-	void					SetVector2(const std::string& name, float x, float y) const;
-	void					SetVector3(const std::string& name, float x, float y, float z) const;
-	void					SetVector4(const std::string& name, float x, float y, float z, float w) const;
+	void SetBool(const std::string& name, bool value) const;
+	void SetInt(const std::string& name, int value) const;
+	void SetFloat(const std::string& name, float value) const;
+	void SetVector2(const std::string& name, float x, float y) const;
+	void SetVector3(const std::string& name, float x, float y, float z) const;
+	void SetVector4(const std::string& name, float x, float y, float z, float w) const;
 
-	int						GetUniformLocation(const std::string& name) const;
+	int GetUniformLocation(const std::string& name) const;
 
-	GLuint					GetProgram() const;
-
-private:
-
-	std::string				name;
-	UniformMap				uniforms;
-	AttributeMap			attributes;
-	ShaderProgram			program;
-	bool					validate;
+	GLuint GetProgram() const;
 
 private:
 
-	std::string				ReadFileAsString(const std::string& filepath);
-	GLuint					CompileShader(GLenum type, const std::string& source);
+	std::string name;
+	UniformMap uniforms;
+	AttributeMap attributes;
+	ShaderProgram program;
+	bool validate;
+
+private:
+
+	std::string ReadFileAsString(const std::string& filepath);
+	GLuint CompileShader(GLenum type, const std::string& source);
 };

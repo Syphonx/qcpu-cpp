@@ -90,7 +90,7 @@ void Platform::Init()
 	ImGui_ImplSDL2_InitForOpenGL(m_Window, m_GlContext);
 	ImGui_ImplOpenGL3_Init(glsl_version);
 
-	m_QuadShader.Create(R"(D:\Portfolio\qcpu\qcpu-cpp\assets\shaders\quad.vs)", R"(D:\Portfolio\qcpu\qcpu-cpp\assets\shaders\quad.fs)");
+	m_QuadShader.Create(R"(assets\shaders\quad.vs)", R"(assets\shaders\quad.fs)");
 	m_QuadMesh.Create(m_QuadShader);
 	m_QuadTexture.Create();
 	m_QuadShader.Use();
