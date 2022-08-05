@@ -2,7 +2,7 @@
 //	QCPU
 //
 
-#include "qcpu.h"
+#include "QCPU.h"
 
 void QCPU::cpu_nop()
 {

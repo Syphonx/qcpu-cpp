@@ -28,17 +28,17 @@
     <Filter Include="Ext\imgui\ext">
       <UniqueIdentifier>{e37d5172-eef1-46d2-8fde-e67305ffa408}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\gl">
-      <UniqueIdentifier>{a7e4e2e5-8ac1-400a-b617-25f68feb6c63}</UniqueIdentifier>
+    <Filter Include="Source Files\OS">
+      <UniqueIdentifier>{a9174834-50bc-485a-9266-c5b9214d45ad}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\gl">
+    <Filter Include="Source Files\OpenGL">
       <UniqueIdentifier>{4551c2a7-6eca-46b9-a9ce-0de727eb9365}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\os">
-      <UniqueIdentifier>{2a3c7ff6-dc4a-4522-b184-b2ee32dd24f0}</UniqueIdentifier>
+    <Filter Include="Header Files\OpenGL">
+      <UniqueIdentifier>{a7e4e2e5-8ac1-400a-b617-25f68feb6c63}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\os">
-      <UniqueIdentifier>{a9174834-50bc-485a-9266-c5b9214d45ad}</UniqueIdentifier>
+    <Filter Include="Header Files\OS">
+      <UniqueIdentifier>{2a3c7ff6-dc4a-4522-b184-b2ee32dd24f0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -69,38 +69,38 @@
     <ClCompile Include="ext\imgui\ext\texteditor\imgui_texteditor.cpp">
       <Filter>Ext\imgui\ext</Filter>
     </ClCompile>
-    <ClCompile Include="src\main.cpp">
+    <ClCompile Include="src\Assembler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\qcpu.cpp">
+    <ClCompile Include="src\Display.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\application.cpp">
+    <ClCompile Include="src\Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\assembler.cpp">
+    <ClCompile Include="src\Ops.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\display.cpp">
+    <ClCompile Include="src\Platform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\platform.cpp">
+    <ClCompile Include="src\QCPU.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\gl\texture.cpp">
-      <Filter>Source Files\gl</Filter>
-    </ClCompile>
-    <ClCompile Include="src\gl\shader.cpp">
-      <Filter>Source Files\gl</Filter>
-    </ClCompile>
-    <ClCompile Include="src\gl\quad.cpp">
-      <Filter>Source Files\gl</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ops.cpp">
+    <ClCompile Include="src\Application.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\os\filesystem.cpp">
-      <Filter>Source Files\os</Filter>
+    <ClCompile Include="src\OS\Filesystem.cpp">
+      <Filter>Source Files\OS</Filter>
+    </ClCompile>
+    <ClCompile Include="src\OpenGL\Shader.cpp">
+      <Filter>Source Files\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\OpenGL\Texture.cpp">
+      <Filter>Source Files\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\OpenGL\Quad.cpp">
+      <Filter>Source Files\OpenGL</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -134,38 +134,38 @@
     <ClInclude Include="ext\imgui\ext\texteditor\imgui_texteditor.h">
       <Filter>Ext\imgui\ext</Filter>
     </ClInclude>
-    <ClInclude Include="include\display.h">
+    <ClInclude Include="include\Constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\platform.h">
+    <ClInclude Include="include\Display.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\qcpu.h">
+    <ClInclude Include="include\Platform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\application.h">
+    <ClInclude Include="include\QCPU.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\assembler.h">
+    <ClInclude Include="include\Timer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\timer.h">
+    <ClInclude Include="include\Application.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\gl\shader.h">
-      <Filter>Header Files\gl</Filter>
-    </ClInclude>
-    <ClInclude Include="include\gl\texture.h">
-      <Filter>Header Files\gl</Filter>
-    </ClInclude>
-    <ClInclude Include="include\gl\quad.h">
-      <Filter>Header Files\gl</Filter>
-    </ClInclude>
-    <ClInclude Include="include\constants.h">
+    <ClInclude Include="include\Assembler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\os\filesystem.h">
-      <Filter>Header Files\os</Filter>
+    <ClInclude Include="include\OS\Filesystem.h">
+      <Filter>Header Files\OS</Filter>
+    </ClInclude>
+    <ClInclude Include="include\OpenGL\Shader.h">
+      <Filter>Header Files\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="include\OpenGL\Texture.h">
+      <Filter>Header Files\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="include\OpenGL\Quad.h">
+      <Filter>Header Files\OpenGL</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

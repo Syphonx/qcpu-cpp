@@ -2,8 +2,8 @@
 //	Assembler
 //
 
-#include "assembler.h"
-#include "os/filesystem.h"
+#include "Assembler.h"
+#include "OS/Filesystem.h"
 
 #define ASSERTF_DEF_ONCE
 #include "assertf.h"
@@ -52,6 +52,9 @@ const std::vector<RegisterData> Assembler::registers =
 };
 
 Assembler::Assembler(const std::string& file)
+	: fileText()
+	, opRegex()
+	, registerRegex()
 {
 	Load(file);
 }

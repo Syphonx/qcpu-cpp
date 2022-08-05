@@ -176,17 +176,17 @@
     <ClCompile Include="ext\imgui\imgui_draw.cpp" />
     <ClCompile Include="ext\imgui\imgui_tables.cpp" />
     <ClCompile Include="ext\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="src\application.cpp" />
-    <ClCompile Include="src\assembler.cpp" />
-    <ClCompile Include="src\display.cpp" />
-    <ClCompile Include="src\gl\quad.cpp" />
-    <ClCompile Include="src\gl\shader.cpp" />
-    <ClCompile Include="src\gl\texture.cpp" />
-    <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\ops.cpp" />
-    <ClCompile Include="src\os\filesystem.cpp" />
-    <ClCompile Include="src\platform.cpp" />
-    <ClCompile Include="src\qcpu.cpp" />
+    <ClCompile Include="src\Application.cpp" />
+    <ClCompile Include="src\Assembler.cpp" />
+    <ClCompile Include="src\Display.cpp" />
+    <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\OpenGL\Quad.cpp" />
+    <ClCompile Include="src\OpenGL\Shader.cpp" />
+    <ClCompile Include="src\OpenGL\Texture.cpp" />
+    <ClCompile Include="src\Ops.cpp" />
+    <ClCompile Include="src\OS\Filesystem.cpp" />
+    <ClCompile Include="src\Platform.cpp" />
+    <ClCompile Include="src\QCPU.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\glad\include\glad\glad.h" />
@@ -199,17 +199,17 @@
     <ClInclude Include="ext\imgui\imstb_rectpack.h" />
     <ClInclude Include="ext\imgui\imstb_textedit.h" />
     <ClInclude Include="ext\imgui\imstb_truetype.h" />
-    <ClInclude Include="include\application.h" />
-    <ClInclude Include="include\assembler.h" />
-    <ClInclude Include="include\constants.h" />
-    <ClInclude Include="include\display.h" />
-    <ClInclude Include="include\gl\quad.h" />
-    <ClInclude Include="include\gl\shader.h" />
-    <ClInclude Include="include\gl\texture.h" />
-    <ClInclude Include="include\os\filesystem.h" />
-    <ClInclude Include="include\platform.h" />
-    <ClInclude Include="include\qcpu.h" />
-    <ClInclude Include="include\timer.h" />
+    <ClInclude Include="include\Application.h" />
+    <ClInclude Include="include\Assembler.h" />
+    <ClInclude Include="include\Constants.h" />
+    <ClInclude Include="include\Display.h" />
+    <ClInclude Include="include\OpenGL\Quad.h" />
+    <ClInclude Include="include\OpenGL\Shader.h" />
+    <ClInclude Include="include\OpenGL\Texture.h" />
+    <ClInclude Include="include\OS\Filesystem.h" />
+    <ClInclude Include="include\Platform.h" />
+    <ClInclude Include="include\QCPU.h" />
+    <ClInclude Include="include\Timer.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\shaders\quad.fs" />

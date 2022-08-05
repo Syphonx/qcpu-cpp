@@ -2,8 +2,8 @@
 //	qcpu c++ version
 //
 
-#include "application.h"
-#include "assembler.h"
+#include "Application.h"
+#include "Assembler.h"
 
 int main(int argc, char *argv[])
 {

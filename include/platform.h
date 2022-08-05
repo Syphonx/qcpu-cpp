@@ -4,14 +4,14 @@
 
 #pragma once
 
-#include "display.h"
-#include "qcpu.h"
-#include "assembler.h"
-#include "os/filesystem.h"
+#include "Display.h"
+#include "QCPU.h"
+#include "Assembler.h"
+#include "OS/Filesystem.h"
 
-#include "gl/shader.h"
-#include "gl/quad.h"
-#include "gl/texture.h"
+#include "OpenGL/Shader.h"
+#include "OpenGL/Quad.h"
+#include "OpenGL/Texture.h"
 
 #include <SDL.h>
 #include <SDL_stdinc.h>

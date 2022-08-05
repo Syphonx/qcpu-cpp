@@ -2,7 +2,7 @@
 //	QCPU
 //
 
-#include "qcpu.h"
+#include "QCPU.h"
 
 QCPU::QCPU()
 	: memory()

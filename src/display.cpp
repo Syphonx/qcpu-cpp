@@ -2,7 +2,7 @@
 //	Display
 //
 
-#include "display.h"
+#include "Display.h"
 
 Display::Display(const uint16_t width, const uint16_t height, const EDisplayMode displayMode)
 	: m_Width(width)

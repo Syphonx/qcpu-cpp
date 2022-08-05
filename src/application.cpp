@@ -2,9 +2,9 @@
 // Application
 //
 
-#include "application.h"
-#include "constants.h"
-#include "os/filesystem.h"
+#include "Application.h"
+#include "Constants.h"
+#include "OS/Filesystem.h"
 
 #include <fstream>
 

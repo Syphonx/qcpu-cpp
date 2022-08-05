@@ -2,9 +2,9 @@
 //	Platform
 //
 
-#include "platform.h"
-#include "constants.h"
-#include "os/filesystem.h"
+#include "Platform.h"
+#include "Constants.h"
+#include "OS/Filesystem.h"
 
 #include <glad/glad.h>
 #include <filesystem>
