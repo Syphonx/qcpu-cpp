@@ -1,0 +1,179 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\OS">
+      <UniqueIdentifier>{a9174834-50bc-485a-9266-c5b9214d45ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\OpenGL">
+      <UniqueIdentifier>{4551c2a7-6eca-46b9-a9ce-0de727eb9365}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\OpenGL">
+      <UniqueIdentifier>{a7e4e2e5-8ac1-400a-b617-25f68feb6c63}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\OS">
+      <UniqueIdentifier>{2a3c7ff6-dc4a-4522-b184-b2ee32dd24f0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lib">
+      <UniqueIdentifier>{29b45320-da0d-403e-8b4a-087217311aea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lib\glad">
+      <UniqueIdentifier>{1c8ebda0-bf03-4bd7-a899-0802fcdb98cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lib\imgui">
+      <UniqueIdentifier>{b363a499-14dd-49f9-98d4-14bcd3b30733}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lib\imgui\header">
+      <UniqueIdentifier>{e29ab267-187b-42fd-965b-c69634c90fd3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lib\imgui\header\ext">
+      <UniqueIdentifier>{645152d8-4b24-45e0-82b4-30c9ad0cc7f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lib\imgui\header\backends">
+      <UniqueIdentifier>{c9282a96-ae2d-430e-a51e-e041d19a1261}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lib\imgui\source">
+      <UniqueIdentifier>{af017451-4d35-44bb-90dd-fb9e1ff091c6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lib\imgui\source\ext">
+      <UniqueIdentifier>{8559ba8d-5b63-41d5-900c-e3dfc63cd08e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lib\imgui\source\backends">
+      <UniqueIdentifier>{68e25777-c5db-4f6e-b350-980bc6049779}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\Display.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Ops.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Platform.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Application.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\OS\Filesystem.cpp">
+      <Filter>Source Files\OS</Filter>
+    </ClCompile>
+    <ClCompile Include="source\OpenGL\Shader.cpp">
+      <Filter>Source Files\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="source\OpenGL\Texture.cpp">
+      <Filter>Source Files\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="source\OpenGL\Quad.cpp">
+      <Filter>Source Files\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\glad\src\glad.c">
+      <Filter>Lib\glad</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\imgui\imgui.cpp">
+      <Filter>Lib\imgui\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\imgui\imgui_widgets.cpp">
+      <Filter>Lib\imgui\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\imgui\imgui_demo.cpp">
+      <Filter>Lib\imgui\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\imgui\imgui_draw.cpp">
+      <Filter>Lib\imgui\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\imgui\imgui_tables.cpp">
+      <Filter>Lib\imgui\source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\imgui\ext\texteditor\imgui_texteditor.cpp">
+      <Filter>Lib\imgui\source\ext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\imgui\backends\imgui_impl_opengl3.cpp">
+      <Filter>Lib\imgui\source\backends</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\imgui\backends\imgui_impl_sdl.cpp">
+      <Filter>Lib\imgui\source\backends</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\Constants.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Display.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Platform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Timer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Application.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\OS\Filesystem.h">
+      <Filter>Header Files\OS</Filter>
+    </ClInclude>
+    <ClInclude Include="include\OpenGL\Shader.h">
+      <Filter>Header Files\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="include\OpenGL\Texture.h">
+      <Filter>Header Files\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="include\OpenGL\Quad.h">
+      <Filter>Header Files\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\glad\include\glad\glad.h">
+      <Filter>Lib\glad</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\imgui\imconfig.h">
+      <Filter>Lib\imgui\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\imgui\imgui.h">
+      <Filter>Lib\imgui\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\imgui\imgui_internal.h">
+      <Filter>Lib\imgui\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\imgui\imstb_rectpack.h">
+      <Filter>Lib\imgui\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\imgui\imstb_textedit.h">
+      <Filter>Lib\imgui\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\imgui\imstb_truetype.h">
+      <Filter>Lib\imgui\header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\imgui\ext\texteditor\imgui_texteditor.h">
+      <Filter>Lib\imgui\header\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\imgui\backends\imgui_impl_sdl.h">
+      <Filter>Lib\imgui\header\backends</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\imgui\backends\imgui_impl_opengl3.h">
+      <Filter>Lib\imgui\header\backends</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\assets\shaders\quad.fs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\assets\shaders\quad.vs">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+</Project>
