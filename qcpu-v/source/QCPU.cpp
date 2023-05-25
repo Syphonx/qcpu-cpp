@@ -139,6 +139,12 @@ void QCPU::ZipArgs(const uint16_t start, const uint16_t end, const std::array<EA
 
 void QCPU::ExecuteOp(const EOpCode opcode)
 {
+	static bool opcode_debug = false;
+	if (opcode_debug)
+	{
+		printf("Exectuing opcode: %s\n", EnumToString(opcode));
+	}
+
 	switch (opcode)
 	{
 		case EOpCode::NOP: cpu_nop(); break;

@@ -6,28 +6,30 @@
 
 #include "TokenType.h"
 
+#include <cstdint>
 #include <string>
-#include <stdint.h>
 
 #include <cereal/cereal.hpp>
+#include <cereal/archives/json.hpp>
 
 struct TokenData
 {
-public:
-
 	TokenData()
+		: type()
+		, address(0)
+		, line(0)
 	{
 	}
 
-	TokenData(const ETokenType type, const std::string& data, const int32_t address, const int32_t line)
+	TokenData(const ETokenType type, std::string data, const int32_t address, const int32_t line)
 		: type(type)
-		, data(data)
+		, data(std::move(data))
 		, address(address)
 		, line(line)
 	{
 	}
 
-	template<class Archive>
+	template <class Archive>
 	void serialize(Archive& archive)
 	{
 		archive(cereal::make_nvp("type", type));

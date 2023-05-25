@@ -14,15 +14,7 @@
 
 struct DebugInfo
 {
-public:
-
-	DebugInfo()
-		: tokens()
-		, labels()
-	{
-	}
-
-	template<class Archive>
+	template <class Archive>
 	void serialize(Archive& archive)
 	{
 		archive(cereal::make_nvp("tokens", tokens));

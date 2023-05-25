@@ -97,12 +97,12 @@ void Platform::Init()
 	m_QuadShader.SetInt("inTexture", 0);
 
 	TextEditor::LanguageDefinition lang = TextEditor::LanguageDefinition::QASM();
-	for (const Opcode& op : Assembler::ops)
+	for (const Opcode& op : Assembler::OPS)
 	{
 		lang.mKeywords.insert(op.name);
 	}
 
-	for (const RegisterData& reg : Assembler::registers)
+	for (const RegisterData& reg : Assembler::REGISTERS)
 	{
 		TextEditor::Identifier id;
 		id.mDeclaration = "Built-in register";

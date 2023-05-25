@@ -1,0 +1,12 @@
+﻿  Application.cpp
+  Main.cpp
+  Ops.cpp
+  Platform.cpp
+     Creating library C:\Users\Jak\Documents\Personal\qcppu\.build\qcpu-p.lib and object C:\Users\Jak\Documents\Personal\qcppu\.build\qcpu-p.exp
+  Generating code
+  40 of 3025 functions ( 1.3%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    10 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  qcpu-p.vcxproj -> C:\Users\Jak\Documents\Personal\qcppu\.build\qcpu-p.exe
+  0 File(s) copied

@@ -8,26 +8,16 @@
 
 #include <fstream>
 
-static int32_t bfindex = 0;
-static std::string bfinput;
-
 Application::Application(const std::string& filename)
 	: m_Cpu()
 	, m_Platform(SCREEN_WIDTH, SCREEN_HEIGHT)
 	, m_Display(TEXTURE_WIDTH, TEXTURE_HEIGHT, EDisplayMode::Vectron)
 	, m_Filename(filename)
 	, m_IsRunning(true)
+	, outputfile(std::fstream("log.txt", std::ios::out))
+	, m_InputIndex(0)
 {
 	Bind();
-
-	FileReader reader;
-	if (reader.Open(R"(..\assets\bottles.txt)", std::ifstream::in))
-	{
-		bfinput.resize(reader.GetLength());
-		reader.Read(reader.GetLength(), bfinput);
-	}
-
-	outputfile = std::fstream("log.txt", std::ios::out);
 }
 
 Application::~Application()
@@ -35,6 +25,16 @@ Application::~Application()
 #if WITH_DISPLAY
 	m_Platform.Shutdown();
 #endif
+}
+
+void Application::ReadInput(const std::string& filename)
+{
+	FileReader reader;
+	if (reader.Open(filename, std::ifstream::in))
+	{
+		m_Input.resize(reader.GetLength());
+		reader.Read(reader.GetLength(), m_Input);
+	}
 }
 
 int32_t Application::Run()
@@ -64,17 +64,17 @@ int32_t Application::Run()
 
 void Application::Bind()
 {
-	GetCpu().Load(m_Filename);
-	GetCpu().Bind(0x06, [this](const OpArgs& args) { Bind_0x06(); });
-	GetCpu().Bind(0x07, [this](const OpArgs& args) { Bind_0x07(); });
-	GetCpu().Bind(0x15, [this](const OpArgs& args) { Bind_0x15(); });
-	GetCpu().Bind(0x16, [this](const OpArgs& args) { Bind_0x16(); });
-	GetCpu().Bind(0x17, [this](const OpArgs& args) { Bind_0x17(); });
-	GetCpu().Bind(0x18, [this](const OpArgs& args) { Bind_0x18(); });
-	GetCpu().Bind(0x19, [this](const OpArgs& args) { Bind_0x19(); });
-	GetCpu().Bind(0x20, [this](const OpArgs& args) { Bind_0x20(); });
-	GetCpu().Bind(0x0B, [this](const OpArgs& args) { Bind_0x0B(); });
-	GetCpu().Bind(0x0C, [this](const OpArgs& args) { Bind_0x0C(); });
+	m_Cpu.Load(m_Filename);
+	m_Cpu.Bind(0x06, [this](const OpArgs& args) { Bind_0x06(); });
+	m_Cpu.Bind(0x07, [this](const OpArgs& args) { Bind_0x07(); });
+	m_Cpu.Bind(0x15, [this](const OpArgs& args) { Bind_0x15(); });
+	m_Cpu.Bind(0x16, [this](const OpArgs& args) { Bind_0x16(); });
+	m_Cpu.Bind(0x17, [this](const OpArgs& args) { Bind_0x17(); });
+	m_Cpu.Bind(0x18, [this](const OpArgs& args) { Bind_0x18(); });
+	m_Cpu.Bind(0x19, [this](const OpArgs& args) { Bind_0x19(); });
+	m_Cpu.Bind(0x20, [this](const OpArgs& args) { Bind_0x20(); });
+	m_Cpu.Bind(0x0B, [this](const OpArgs& args) { Bind_0x0B(); });
+	m_Cpu.Bind(0x0C, [this](const OpArgs& args) { Bind_0x0C(); });
 }
 
 void Application::Bind_0x06()
@@ -85,22 +85,23 @@ void Application::Bind_0x06()
 
 void Application::Bind_0x07()
 {
-	if (bfindex > bfinput.size())
+	if (m_InputIndex > m_Input.length())
 	{
 		m_Cpu.flags.exit = 0;
-		return;
 	}
-	GetCpu().registers.x = bfinput[bfindex];
-	bfindex++;
+	else
+	{
+		m_Cpu.registers.x = m_Input[m_InputIndex++];
+	}
 }
 
 void Application::Bind_0x15()
 {
 #if WITH_DISPLAY
 	m_Display.SetDrawMode(EDrawMode::Disabled);
-	m_Display.MoveCursor(GetCpu().registers.x, GetCpu().registers.y);
+	m_Display.MoveCursor(m_Cpu.registers.x, m_Cpu.registers.y);
 	m_Display.SetDrawMode(EDrawMode::Enabled);
-	m_Display.MoveCursor(GetCpu().registers.a, GetCpu().registers.b);
+	m_Display.MoveCursor(m_Cpu.registers.a, m_Cpu.registers.b);
 	m_Display.Flush();
 #endif
 }
@@ -109,7 +110,7 @@ void Application::Bind_0x16()
 {
 #if WITH_DISPLAY
 	m_Display.SetDrawMode(EDrawMode::Disabled);
-	m_Display.MoveCursor(GetCpu().registers.x, GetCpu().registers.y);
+	m_Display.MoveCursor(m_Cpu.registers.x, m_Cpu.registers.y);
 	m_Display.SetDrawMode(EDrawMode::Enabled);
 	m_Display.Flush();
 #endif
@@ -118,7 +119,7 @@ void Application::Bind_0x16()
 void Application::Bind_0x17()
 {
 #if WITH_DISPLAY
-	m_Display.MoveCursor(GetCpu().registers.x, GetCpu().registers.y);
+	m_Display.MoveCursor(m_Cpu.registers.x, m_Cpu.registers.y);
 	m_Display.Flush();
 #endif
 }
@@ -126,14 +127,14 @@ void Application::Bind_0x17()
 void Application::Bind_0x18()
 {
 #if WITH_DISPLAY
-	m_Display.SetColour(EColourMode::Brightness, GetCpu().registers.x);
+	m_Display.SetColour(EColourMode::Brightness, m_Cpu.registers.x);
 #endif
 }
 
 void Application::Bind_0x19()
 {
 #if WITH_DISPLAY
-	m_Display.SetColour(EColourMode::Binary, GetCpu().registers.x);
+	m_Display.SetColour(EColourMode::Binary, m_Cpu.registers.x);
 #endif
 }
 
@@ -162,7 +163,7 @@ void Application::Update()
 			return;
 		}
 
-		double elapsed = m_BenchTimer.ElapsedMilliSeconds();
+		const double elapsed = m_BenchTimer.ElapsedMilliSeconds();
 
 		outputfile.close(); 
 		std::ifstream f("log.txt");
@@ -206,9 +207,4 @@ void Application::Render()
 bool Application::IsRunning() const
 {
 	return m_IsRunning;
-}
-
-QCPU& Application::GetCpu()
-{
-	return m_Cpu;
 }

@@ -9,7 +9,7 @@
 struct Flags
 {
 	Flags()
-		: halt(1)
+		: halt(0)
 		, exit(-1)
 		, blok(false)
 	{

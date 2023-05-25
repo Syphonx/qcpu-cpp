@@ -19,6 +19,7 @@ public:
 	Application(const std::string& filename);
 	~Application();
 
+	void ReadInput(const std::string& filename);
 	int32_t Run();
 
 	void Bind();
@@ -50,4 +51,6 @@ private:
 	std::fstream outputfile;
 	std::string m_Filename;
 	bool m_IsRunning;
+	std::string m_Input;
+	int32_t m_InputIndex;
 };

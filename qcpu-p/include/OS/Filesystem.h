@@ -4,10 +4,10 @@
 
 #pragma once
 
-#include <string>
 #include <fstream>
-#include <sstream>
 #include <iostream>
+#include <sstream>
+#include <string>
 #include <vector>
 
 enum class EFileType : uint8_t
@@ -19,21 +19,23 @@ enum class EFileType : uint8_t
 class FileReader
 {
 public:
-
 	FileReader();
 	~FileReader();
 
-	bool Open(const std::string& path, const int32_t mode = std::ios::in);
+	bool Open(const std::string& path, int32_t mode = std::ios::in);
 	bool Exists(const std::string& path);
 	void Close();
+
 	std::ifstream& GetStream()
 	{
 		return file;
 	}
 
-	bool Read(const int32_t length, std::string& out);
+	bool Read(uint32_t length, std::string& out);
 	bool ReadLines(std::vector<std::string>& out);
-	int32_t GetLength();
+	uint32_t GetLength();
+
+private:
 
 	std::ifstream file;
 };
@@ -41,13 +43,13 @@ public:
 class FileWriter
 {
 public:
-
 	FileWriter();
 	~FileWriter();
 
 	bool Open(const std::string& path);
 	bool Exists(const std::string& path);
 	void Close();
+
 	std::ofstream& GetStream()
 	{
 		return file;

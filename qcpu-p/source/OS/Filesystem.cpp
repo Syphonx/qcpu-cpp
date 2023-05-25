@@ -4,11 +4,23 @@
 
 #include "OS/Filesystem.h"
 
-#include <assert.h>
+#include <cassert>
+#include <cstdarg>
+
+namespace FileReaderPrivate
+{
+	bool PrintError(const char* format, ...)
+	{
+		va_list argptr;
+		va_start(argptr, format);
+		vfprintf(stderr, format, argptr);
+		va_end(argptr);
+		return false;
+	}
+}
 
 FileReader::FileReader()
 {
-
 }
 
 FileReader::~FileReader()
@@ -31,11 +43,8 @@ bool FileReader::Open(const std::string& path, const int32_t mode)
 		printf("Opened file at path (%s)\n", path.c_str());
 		return true;
 	}
-	else
-	{
-		printf("Failed to open file at path (%s)\n", path.c_str());
-		return false;
-	}
+	printf("Failed to open file at path (%s)\n", path.c_str());
+	return false;
 }
 
 bool FileReader::Exists(const std::string& path)
@@ -46,26 +55,20 @@ bool FileReader::Exists(const std::string& path)
 		Close();
 		return true;
 	}
-	else
-	{
-		printf("Failed to open file at path (%s)\n", path.c_str());
-		return false;
-	}
+	printf("Failed to open file at path (%s)\n", path.c_str());
+	return false;
 }
 
-bool FileReader::Read(const int32_t length, std::string& out)
+bool FileReader::Read(const uint32_t length, std::string& out)
 {
 	if (file.is_open())
 	{
 		assert(out.size() >= length);
-		file.read(&out[0], length);
+		file.read(out.data(), length);
 		return true;
 	}
-	else
-	{
-		printf("Failed to read from file, file not open.\n");
-		return false;
-	}
+	printf("Failed to read from file, file not open.\n");
+	return false;
 }
 
 bool FileReader::ReadLines(std::vector<std::string>& out)
@@ -81,14 +84,11 @@ bool FileReader::ReadLines(std::vector<std::string>& out)
 
 		return true;
 	}
-	else
-	{
-		printf("Failed to read from file, file not open.\n");
-		return false;
-	}
+	printf("Failed to read from file, file not open.\n");
+	return false;
 }
 
-int32_t FileReader::GetLength()
+uint32_t FileReader::GetLength()
 {
 	int32_t len = -1;
 	if (file.is_open())
@@ -117,11 +117,6 @@ void FileReader::Close()
 	}
 }
 
-FileWriter::FileWriter()
-{
-
-}
-
 FileWriter::~FileWriter()
 {
 	Close();
@@ -142,11 +137,8 @@ bool FileWriter::Open(const std::string& path)
 		printf("Opened file at path (%s)\n", path.c_str());
 		return true;
 	}
-	else
-	{
-		printf("Failed to open file at path (%s)\n", path.c_str());
-		return false;
-	}
+	printf("Failed to open file at path (%s)\n", path.c_str());
+	return false;
 }
 
 bool FileWriter::Exists(const std::string& path)
@@ -157,11 +149,8 @@ bool FileWriter::Exists(const std::string& path)
 		Close();
 		return true;
 	}
-	else
-	{
-		printf("Failed to open file at path (%s)\n", path.c_str());
-		return false;
-	}
+	printf("Failed to open file at path (%s)\n", path.c_str());
+	return false;
 }
 
 void FileWriter::Close()
@@ -184,9 +173,6 @@ bool FileWriter::Write(const std::string& out)
 		file.write(&out[0], out.size());
 		return true;
 	}
-	else
-	{
-		printf("Failed to write from file, file not open.\n");
-		return false;
-	}
+	printf("Failed to write from file, file not open.\n");
+	return false;
 }

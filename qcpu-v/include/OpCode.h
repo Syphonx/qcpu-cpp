@@ -47,3 +47,37 @@ enum class EOpCode : uint8_t
 	PSH = 0x17, // push value of a onto stack
 	POP = 0x18  // pop top value from stack into a
 };
+
+static const char* EnumToString(const EOpCode InOpcode)
+{
+	switch (InOpcode)
+	{
+		case EOpCode::NOP: return "NOP";
+		case EOpCode::EXT: return "EXT";
+		case EOpCode::SYS: return "SYS";
+		case EOpCode::MOV: return "MOV";
+		case EOpCode::JMP: return "JMP";
+		case EOpCode::JEQ: return "JEQ";
+		case EOpCode::JNE: return "JNE";
+		case EOpCode::JGT: return "JGT";
+		case EOpCode::JGE: return "JGE";
+		case EOpCode::JLT: return "JLT";
+		case EOpCode::JLE: return "JLE";
+		case EOpCode::JSR: return "JSR";
+		case EOpCode::RET: return "RET";
+		case EOpCode::ADD: return "ADD";
+		case EOpCode::SUB: return "SUB";
+		case EOpCode::MUL: return "MUL";
+		case EOpCode::MDL: return "MDL";
+		case EOpCode::AND: return "AND";
+		case EOpCode::ORR: return "ORR";
+		case EOpCode::NOT: return "NOT";
+		case EOpCode::XOR: return "XOR";
+		case EOpCode::LSL: return "LSL";
+		case EOpCode::LSR: return "LSR";
+		case EOpCode::PSH: return "PSH";
+		case EOpCode::POP: return "POP";
+	}
+
+	return "";
+}

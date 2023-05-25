@@ -3,17 +3,18 @@
 //
 
 #include "Assembler.h"
-#include "Filesystem.h"
 #include "DebugInfo.h"
+#include "Filesystem.h"
 
 #define ASSERTF_DEF_ONCE
 #include "assertf.h"
 
-#include <iostream>
+#include <cassert>
 #include <fstream>
-#include <assert.h>
+#include <iostream>
+#include <cereal/archives/json.hpp>
 
-const std::vector<Opcode> Assembler::ops =
+const std::vector<Opcode> Assembler::OPS =
 {
 	Opcode("nop", 0x00, 0),
 	Opcode("ext", 0x01, 1),
@@ -42,7 +43,7 @@ const std::vector<Opcode> Assembler::ops =
 	Opcode("pop", 0x18, 1)
 };
 
-const std::vector<RegisterData> Assembler::registers =
+const std::vector<RegisterData> Assembler::REGISTERS =
 {
 	RegisterData("a", 0x00),
 	RegisterData("b", 0x01),
@@ -52,6 +53,69 @@ const std::vector<RegisterData> Assembler::registers =
 	RegisterData("y", 0x05)
 };
 
+namespace AssemblerPrivate
+{
+	std::unordered_map<std::string, int32_t> BuildLabelTable(const std::vector<TokenData>& tokens)
+	{
+		std::unordered_map<std::string, int32_t> table;
+
+		for (const auto& token : tokens)
+		{
+			if (token.type == ETokenType::Label && !(token.data == "+" || token.data == "-"))
+			{
+				table[token.data] = token.address;
+			}
+		}
+
+		return table;
+	}
+
+	std::vector<uint8_t> Write(const std::vector<uint16_t>& converted)
+	{
+		std::vector<uint8_t> buffer;
+		buffer.resize(2 * converted.size());
+
+		for (size_t i = 0; i < converted.size(); i++)
+		{
+			uint16_t n = converted[i];
+			uint8_t high = static_cast<uint8_t>(((0xFF00 & n) >> 8));
+			uint8_t low = static_cast<uint8_t>(0x00FF & n);
+			buffer[i * 2] = low;
+			buffer[(i * 2) + 1] = high;
+		}
+
+		return buffer;
+	}
+
+	const Opcode& FindOpByName(const std::string& name)
+	{
+		for (auto& op : Assembler::OPS)
+		{
+			if (op.name == name)
+			{
+				return op;
+			}
+		}
+
+		assertf(false, "Failed to find opcode with name: %s", name.c_str());
+		return Assembler::OPS[0]; // Invalid
+	}
+
+	const RegisterData& FindRegByName(const std::string& name)
+	{
+		for (auto& reg : Assembler::REGISTERS)
+		{
+			if (reg.name == name)
+			{
+				return reg;
+			}
+		}
+
+		assertf(false, "Failed to find register with name: %s", name.c_str());
+		return Assembler::REGISTERS[0]; // Invalid
+	}
+}
+
 Assembler::Assembler(const std::string& file)
 	: fileText()
 	, opRegex()
@@ -60,41 +124,12 @@ Assembler::Assembler(const std::string& file)
 	Load(file);
 }
 
-std::regex Assembler::BuildOpcodeRegex() const
-{
-	std::string regex_builder = R"(^(?:)";
-	for (size_t i = 0; i < ops.size(); i++)
-	{
-		if (i < ops.size() - 1)
-		{
-			regex_builder += ops[i].name + "|";
-		}
-		else
-		{
-			regex_builder += ops[i].name;
-		}
-	}
-	regex_builder += R"()$)";
-	return std::regex(regex_builder);
-}
-
-std::regex Assembler::BuildRegisterRegex() const
-{
-	std::string regex_builder = R"(^[)";
-	for (const RegisterData& reg : registers)
-	{
-		regex_builder += reg.name;
-	}
-	regex_builder += R"(]$)";
-	return std::regex(regex_builder);
-}
-
-uint16_t Assembler::ParseInt(const std::string& s, uint16_t radix /*= 10*/)
+uint16_t Assembler::ParseInt(const std::string& s, uint16_t radix /*= 10*/) const
 {
 	return std::stoi(s, nullptr, radix);
 }
 
-uint16_t Assembler::ParseNumber(const std::string& s)
+uint16_t Assembler::ParseNumber(const std::string& s) const
 {
 	std::smatch match;
 
@@ -104,12 +139,12 @@ uint16_t Assembler::ParseNumber(const std::string& s)
 		return ParseInt(s);
 	}
 	// Grab all the hex digits
-	else if (std::regex_search(s.begin(), s.end(), match, std::regex(R"(^0x([0-9a-f]+)$)", std::regex_constants::icase)))
+	if (std::regex_search(s.begin(), s.end(), match, std::regex(R"(^0x([0-9a-f]+)$)", std::regex_constants::icase)))
 	{
 		return ParseInt(match[0], 16);
 	}
 	// Grab all the binary digits
-	else if (std::regex_search(s.begin(), s.end(), match, std::regex(R"(^0b([01]+)$)", std::regex_constants::icase)))
+	if (std::regex_search(s.begin(), s.end(), match, std::regex(R"(^0b([01]+)$)", std::regex_constants::icase)))
 	{
 		return ParseInt(match[1], 2);
 	}
@@ -118,33 +153,59 @@ uint16_t Assembler::ParseNumber(const std::string& s)
 	return 0;
 }
 
-bool Assembler::IsNumber(const std::string& s)
+bool Assembler::IsNumber(const std::string& s) const
 {
 	if (std::regex_match(s, std::regex(R"(^\d+$)")))
 	{
 		return true;
 	}
-	else if (std::regex_match(s, std::regex(R"(^0x[0-9a-f]+$)", std::regex_constants::icase)))
+	if (std::regex_match(s, std::regex(R"(^0x[0-9a-f]+$)", std::regex_constants::icase)))
 	{
 		return true;
 	}
-	else if (std::regex_match(s, std::regex(R"(^0b[01]+$)", std::regex_constants::icase)))
+	if (std::regex_match(s, std::regex(R"(^0b[01]+$)", std::regex_constants::icase)))
 	{
 		return true;
 	}
-	else
-	{
-		return false;
-	}
+	return false;
 
 	return false;
 }
 
 void Assembler::Prepare()
 {
+	auto buildOpcodeRegex = []
+	{
+		std::string regexBuilder = R"(^(?:)";
+		for (size_t i = 0; i < OPS.size(); i++)
+		{
+			if (i < OPS.size() - 1)
+			{
+				regexBuilder += OPS[i].name + "|";
+			}
+			else
+			{
+				regexBuilder += OPS[i].name;
+			}
+		}
+		regexBuilder += R"()$)";
+		return std::regex(regexBuilder);
+	};
+
+	auto buildRegisterRegex = []
+	{
+		std::string regexBuilder = R"(^[)";
+		for (const RegisterData& reg : REGISTERS)
+		{
+			regexBuilder += reg.name;
+		}
+		regexBuilder += R"(]$)";
+		return std::regex(regexBuilder);
+	};
+
 	fileText = std::regex_replace(fileText, std::regex(R"(\r)"), "");
-	opRegex = BuildOpcodeRegex();
-	registerRegex = BuildRegisterRegex();
+	opRegex = buildOpcodeRegex();
+	registerRegex = buildRegisterRegex();
 }
 
 std::vector<TokenData> Assembler::Tokenize()
@@ -154,13 +215,14 @@ std::vector<TokenData> Assembler::Tokenize()
 	std::vector<TokenData> tokens;
 	std::vector<std::string> labels;
 
-	int32_t			line = 1;
-	int32_t			address = 0;
-	int32_t			index = 0;
-	int32_t			depth = 0;
-	std::string		token = "";
+	int32_t line = 1;
+	int32_t address = 0;
+	int32_t depth = 0;
+	int32_t index = 0;
+	int32_t size = static_cast<int32_t>(fileText.size());
+	std::string token;
 
-	while (index <= fileText.size())
+	while (index <= size)
 	{
 		// Grab the character at [index]
 		std::string c(1, fileText[index]);
@@ -200,7 +262,7 @@ std::vector<TokenData> Assembler::Tokenize()
 			{
 				if (!token.empty())
 				{
-					ETokenType type = ETokenType::None;
+					auto type = ETokenType::None;
 
 					if (std::regex_match(token, opRegex))
 					{
@@ -227,12 +289,12 @@ std::vector<TokenData> Assembler::Tokenize()
 						type = ETokenType::Directive;
 					}
 					else if (HasMatch(token, std::regex(R"(^\$\w+$)", std::regex_constants::icase))
-							 && IsNumber(GetMatch(token, std::regex(R"(^\$(\w+)$)"), 1)))
+						&& IsNumber(GetMatch(token, std::regex(R"(^\$(\w+)$)"), 1)))
 					{
 						type = ETokenType::Absolute;
 					}
 					else if (HasMatch(token, std::regex(R"(^\[\w*\]$)", std::regex_constants::icase))
-							 && std::regex_match(GetMatch(token, std::regex(R"(^\[(\w*)\]$)", std::regex_constants::icase), 1), registerRegex))
+						&& std::regex_match(GetMatch(token, std::regex(R"(^\[(\w*)\]$)", std::regex_constants::icase), 1), registerRegex))
 					{
 						type = ETokenType::Indirect;
 					}
@@ -252,9 +314,9 @@ std::vector<TokenData> Assembler::Tokenize()
 					if (type == ETokenType::Directive)
 					{
 						// Directives are handles by assembler
-						std::regex		expr(R"(^[\.](\w+)(?:\((.*)\))$)", std::regex_constants::icase);
-						std::string		directive = ToLowercase(GetMatch(token, expr, 1));
-						std::string		argument = GetMatch(token, expr, 2);
+						std::regex expr(R"(^[\.](\w+)(?:\((.*)\))$)", std::regex_constants::icase);
+						std::string directive = ToLowercase(GetMatch(token, expr, 1));
+						std::string argument = GetMatch(token, expr, 2);
 
 						if (directive == "org")
 						{
@@ -275,7 +337,7 @@ std::vector<TokenData> Assembler::Tokenize()
 								ReplaceText(temp, std::regex(R"(\n)"), R"(\n)");
 								for (const char byte : temp)
 								{
-									std::string s = std::to_string((uint16_t)byte);
+									std::string s = std::to_string(static_cast<uint16_t>(byte));
 									tokens.emplace_back(ETokenType::Immediate, s, address, line);
 									address++;
 								}
@@ -310,7 +372,7 @@ std::vector<TokenData> Assembler::Tokenize()
 						address++;
 					}
 				}
-			
+
 				if (c == "\n")
 				{
 					line++;
@@ -337,22 +399,7 @@ std::vector<TokenData> Assembler::Tokenize()
 	return tokens;
 }
 
-std::unordered_map<std::string, int32_t> Assembler::BuildLabelTable(const std::vector<TokenData>& tokens)
-{
-	std::unordered_map<std::string, int32_t> table;
-
-	for (const auto& token : tokens)
-	{
-		if (token.type == ETokenType::Label && !(token.data == "+" || token.data == "-"))
-		{
-			table[token.data] = token.address;
-		}
-	}
-
-	return table;
-}
-
-std::vector<uint16_t> Assembler::Convert(const std::vector<TokenData>& tokens, const std::unordered_map<std::string, int32_t>& labels)
+std::vector<uint16_t> Assembler::Convert(const std::vector<TokenData>& tokens, const std::unordered_map<std::string, int32_t>& labels) const
 {
 	std::unordered_map<ETokenType, uint16_t> addressingModeMap;
 	addressingModeMap.emplace(ETokenType::Immediate, 0b00);
@@ -380,8 +427,8 @@ std::vector<uint16_t> Assembler::Convert(const std::vector<TokenData>& tokens, c
 		{
 			case ETokenType::Op:
 			{
-				const Opcode& op = FindOpByName(token.data);
-				std::vector<TokenData> args = std::vector<TokenData>(tokens.begin() + i + 1, tokens.begin() + i + 1 + op.arity);
+				const Opcode& op = AssemblerPrivate::FindOpByName(token.data);
+				auto args = std::vector<TokenData>(tokens.begin() + i + 1, tokens.begin() + i + 1 + op.arity);
 				std::vector<uint16_t> types;
 
 				for (const TokenData& arg : args)
@@ -400,11 +447,11 @@ std::vector<uint16_t> Assembler::Convert(const std::vector<TokenData>& tokens, c
 
 			case ETokenType::Register:
 			{
-				word = FindRegByName(token.data).value;
+				word = AssemblerPrivate::FindRegByName(token.data).value;
 			}
 			break;
 
-			case ETokenType::ImmediateLabelReference:	// Fallthrough intentional
+			case ETokenType::ImmediateLabelReference: // Fallthrough intentional
 			case ETokenType::AbsoluteLabelReference:
 			{
 				if (token.data == "-")
@@ -444,7 +491,6 @@ std::vector<uint16_t> Assembler::Convert(const std::vector<TokenData>& tokens, c
 						assertf(false, "Couldn't find label: %s", label.c_str());
 					}
 				}
-
 			}
 			break;
 
@@ -462,7 +508,12 @@ std::vector<uint16_t> Assembler::Convert(const std::vector<TokenData>& tokens, c
 
 			case ETokenType::Indirect:
 			{
-				word = FindRegByName(ToLowercase(GetMatch(token.data, std::regex(R"(\[(a|b|c|d|x|y)\])", std::regex_constants::icase), 1))).value;
+				word = AssemblerPrivate::FindRegByName(ToLowercase(GetMatch(token.data, std::regex(R"(\[(a|b|c|d|x|y)\])", std::regex_constants::icase), 1))).value;
+			}
+			break;
+
+			default:
+			{
 			}
 			break;
 		}
@@ -473,29 +524,12 @@ std::vector<uint16_t> Assembler::Convert(const std::vector<TokenData>& tokens, c
 	return memory;
 }
 
-std::vector<uint8_t> Assembler::Write(const std::vector<uint16_t>& converted)
-{
-	std::vector<uint8_t> buffer;
-	buffer.resize(2 * converted.size());
-
-	for (size_t i = 0; i < converted.size(); i++)
-	{
-		uint16_t n = converted[i];
-		uint8_t high = static_cast<uint8_t>(((0xFF00 & n) >> 8));
-		uint8_t low = static_cast<uint8_t>(0x00FF & n);
-		buffer[i * 2] = low;
-		buffer[(i * 2) + 1] = high;
-	}
-
-	return buffer;
-}
-
 std::vector<uint8_t> Assembler::Assemble()
 {
 	auto tokens = Tokenize();
-	auto labelTable = BuildLabelTable(tokens);
+	auto labelTable = AssemblerPrivate::BuildLabelTable(tokens);
 	auto converted = Convert(tokens, labelTable);
-	auto bytes = Write(converted);
+	auto bytes = AssemblerPrivate::Write(converted);
 
 	return bytes;
 }
@@ -503,9 +537,9 @@ std::vector<uint8_t> Assembler::Assemble()
 void Assembler::AssembleAndSave(const std::string& filename)
 {
 	auto tokens = Tokenize();
-	auto labelTable = BuildLabelTable(tokens);
+	auto labelTable = AssemblerPrivate::BuildLabelTable(tokens);
 	auto converted = Convert(tokens, labelTable);
-	auto bytes = Write(converted);
+	auto bytes = AssemblerPrivate::Write(converted);
 
 	std::ofstream file(filename, std::ios::out | std::ios::binary);
 	if (!bytes.empty())
@@ -544,34 +578,6 @@ void Assembler::Load(const std::string& in)
 					std::istream_iterator<char>());
 }
 
-const Opcode& Assembler::FindOpByName(const std::string& name) const
-{
-	for (auto& op : ops)
-	{
-		if (op.name == name)
-		{
-			return op;
-		}
-	}
-
-	assertf(false, "Failed to find opcode with name: %s", name.c_str());
-	return ops[0];	// Invalid
-}
-
-const RegisterData& Assembler::FindRegByName(const std::string& name) const
-{
-	for (auto& reg : registers)
-	{
-		if (reg.name == name)
-		{
-			return reg;
-		}
-	}
-
-	assertf(false, "Failed to find register with name: %s", name.c_str());
-	return registers[0];	// Invalid
-}
-
 void Assembler::ReplaceText(std::string& s, const std::regex& expression, const std::string& value) const
 {
 	s = std::regex_replace(s, expression, value);
@@ -594,10 +600,9 @@ std::string Assembler::GetMatch(const std::string& s, const std::regex& expressi
 	return "";
 }
 
-std::string Assembler::ToLowercase(const std::string& s)
+std::string Assembler::ToLowercase(const std::string& s) const
 {
 	std::string s2 = s;
 	std::transform(s2.begin(), s2.end(), s2.begin(), tolower);
 	return std::move(s2);
 }
-
